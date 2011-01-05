@@ -289,9 +289,10 @@ public:
 
     bool operator() (const Point& pointA, const Point& pointB) const
     {
-        double det = det2(pointA - origin_, pointB - origin_);
+        const Point& A = pointA - origin_, B = pointB - origin_;
+        double det = det2(A, B);
         if (fabs(det) < constants::EPS) {
-
+            return A.squaredLength() < B.squaredLength();
         } else {
             return det > 0;
         }            
@@ -311,14 +312,21 @@ void convexHull2(Points points, Polygon* polygon)
     Points::iterator originIterator = 
         min_element(points.begin(), points.end());
     Point origin = *originIterator;
-    Points::iterator lastPointIterator = 
-        points.end()-1;
-    swap(*lastPointIterator, *originIterator);
+    swap(*points.begin(), *originIterator);
 
     PointsComparator comparator(origin); 
 
-    forv(i, points) {
-            
+    sort(points.begin()+1, points.end(), comparator); 
+    
+    typedef vector<Point> ConvexHull;
+
+    ConvexHull convexHull;
+    Points::const_iterator iter = points.begin();
+    forn(i, 2) {
+        convexHull.push_back(*iter++);
+    }
+    for ( ;iter != points.end(); ++iter) {
+           
     }
 }
 
