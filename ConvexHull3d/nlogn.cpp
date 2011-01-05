@@ -191,6 +191,8 @@ Facet makeFacet(size_t a, size_t b, size_t c)
     return facet;
 }
 
+
+
 void solve() 
 {
     int numPoints;
