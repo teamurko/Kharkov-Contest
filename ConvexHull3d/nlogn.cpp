@@ -247,18 +247,50 @@ typedef set<Edge> Edges;
 class ConvexFigure 
 {
 public:
+    typedef map<size_t, Point> GeometryMap;
+
     ConvexFigure() {}
     virtual ~ConvexFigure() = 0;
+
+    void addEdge(const Point& from, const Point& to) 
+    {
+        addEdge(from.id(), to.id());
+        addGeometry(from);
+        addGeometry(to);
+    }
+
+    void addGeometry(const Point& point)
+    {
+        if (!geometryById_.count(point.id())) {
+            geometryById_.insert(make_pair(point.id(), point));
+        }
+    }
+
     void addEdge(size_t from, size_t to)
     {
         edges_.insert(Edge(from, to));
     }
+
     void addEdge(const Edge& edge)
     {
         edges_.insert(edge);
-    } 
+    }
+     
+    bool adjacent(size_t from, size_t to) const
+    {
+        return binary_search(edges_.begin(), edges_.end(), Edge(from, to));
+    }
+
+    const Point& geometry(size_t id) const 
+    {
+        GeometryMap::const_iterator iter = 
+            geometryById_.find(id);
+        assert(iter != geometryById_.end());
+        return iter->second;
+    }
 private:
-    Edges edges_;            
+    Edges edges_;
+    GeometryMap geometryById_;       
 };
 
 class Polyhedron: public ConvexFigure
@@ -269,7 +301,7 @@ public:
 private:
 };
 
-class Polygon 
+class Polygon: public  ConvexFigure
 {
 public:     
     Polygon() {}
@@ -306,6 +338,11 @@ void convexHullSimple(Points points, Polyhedron* polyhedron, Polygon* polygon)
     
 }
 
+void merge(const Polygon& polygonA, const Polygon& polygonB, Polygon* result)
+{
+        
+}
+
 void convexHull2(Points points, Polygon* polygon)
 {
     assert(points.size() >= 3);
@@ -326,7 +363,16 @@ void convexHull2(Points points, Polygon* polygon)
         convexHull.push_back(*iter++);
     }
     for ( ;iter != points.end(); ++iter) {
-           
+        while (convexHull.size() >= 2 && 
+            !turnsLeft(convexHull[convexHull.size()-2],
+                       convexHull[convexHull.size()-1],
+                       *iter)) convexHull.pop_back();
+    }
+    //TODO check if convexHull is ok, 
+    //e.g. it does not contain tree points on the same line
+
+    forv(i, convexHull) {
+        polygon->addEdge(convexHull[i].id(), convexHull[(i+1)%convexHull.size()].id());
     }
 }
 
