@@ -54,6 +54,17 @@ Point operator-(const Point& pointA, const Point& pointB)
             pointA.z() - pointB.z());
 }
 
+Point operator+(const Point& pointA, const Point& pointB)
+{
+    return Point(pointA.x() + pointB.x(), pointA.y() + pointB.y(),
+            pointA.z() + pointB.z());
+}
+
+Point operator/(const Point& point, double divisor)
+{
+    return Point(point.x() / divisor(), point.y() / divisor, point.z() / divisor);
+}
+
 bool operator<(const Point& pointA, const Point& pointB) 
 {
     if (pointA.x() != pointB.x()) {
@@ -71,6 +82,21 @@ double det(double a, double b, double c, double d)
 {
     return a * d - b * c;
 }
+
+class Line
+{
+public:
+    Line(const Point& a, const Point& b) :
+        a_(b.x() - a.x()), b_(a.y() - b.y()),
+        c_(-a_
+    {
+                
+    }
+private:
+    double a_;
+    double b_;
+    double c_;
+};
 
 class Plane
 {
@@ -288,6 +314,17 @@ public:
         assert(iter != geometryById_.end());
         return iter->second;
     }
+
+    vector<size_t> adjacentVertices(size_t vertex) const 
+    {
+        Edges::const_iterator edgesIterator =
+            lower_bound(edges_.begin(), edges_.end(), Edge(vertex, 0));
+        vector<size_t> result;
+        while (edgesIterator != edges_.end() &&
+            edgesIterator->from() == vertex) result.push_back((*edgesIterator++).to());
+        return result;        
+    }
+
 private:
     Edges edges_;
     GeometryMap geometryById_;       
@@ -306,6 +343,23 @@ class Polygon: public  ConvexFigure
 public:     
     Polygon() {}
     virtual ~Polygon() {}
+    Points vertices() const
+    {
+        Points result(1, anyVertex());
+        Points pts;
+        for(pts = adjacentVertices(result.back().id()); 
+            !pts.empty() && pts[0].id() != result[0].id(); 
+            pts = adjacentVertices(result.back().id())) {
+            result.push_back(pts[0]);
+        }
+        return result;
+    }
+
+    Point anyVertex() const
+    {
+        assert(!edges_.empty());
+        return geometry(edges_[0].from());
+    }
 private:
 };
 
@@ -338,9 +392,38 @@ void convexHullSimple(Points points, Polyhedron* polyhedron, Polygon* polygon)
     
 }
 
+// Polygons are convex, vertices are counter-clockwise ordered
 void merge(const Polygon& polygonA, const Polygon& polygonB, Polygon* result)
 {
-        
+    Points pa = polygonA.vertices();
+    Points pb = polygonB.vertices();
+
+    Point innerPoint = (pa[0] + pa[1] + pa[2]) / 3.0;
+
+    size_t beginId = findTangent(pb, innerPoint, cmp1);
+    size_t endId = findTangent(pb, innerPoint, cmp2) + 1;
+
+    rotate(pb.begin(), pb.begin() + beginId, pb.end());
+    endId = (endId + pb.size() - beginId) % pb.size();
+
+    deque<Point> db;
+    forn(i, endId) {
+        db.push_back(pb[i]);
+    }
+
+    Point middlePoint = (db.front() + db.back()) / 2.0;
+
+    
+}
+
+bool turnsLeft(const Point& a, const Point& b, const Point& c)
+{
+    return det2(b-a, c-a) > constants::EPS;
+}
+
+bool sameLine(const Point& a, const Point& b, const Point& c)
+{
+    return fabs(det2(b-a, c-a)) < constants::EPS;
 }
 
 void convexHull2(Points points, Polygon* polygon)
@@ -366,7 +449,15 @@ void convexHull2(Points points, Polygon* polygon)
         while (convexHull.size() >= 2 && 
             !turnsLeft(convexHull[convexHull.size()-2],
                        convexHull[convexHull.size()-1],
-                       *iter)) convexHull.pop_back();
+                       *iter)) {
+            convexHull.pop_back();
+        }
+    }
+
+    //remove intermediate points
+    while (convexHull.size() >= 3 && 
+        sameLine(convexHull[0], convexHull.back(), convexHull[convexHull.size()-2])) {
+            convexHull.pop_back();
     }
     //TODO check if convexHull is ok, 
     //e.g. it does not contain tree points on the same line
