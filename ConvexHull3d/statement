@@ -1,0 +1,22 @@
+Given a set of points by its coordinates x, y, z.
+All points are different.
+No three points are on the same line.
+No four points are on the same plane.
+
+Find a convex hull of this points.
+
+Number of points is n (1 <= n <= 100000).
+
+All points are numerated according to the order in input.
+Coordinates of ith point is given in the (i+1)th line of input.
+
+The convex hull is determined by its facets.
+
+Print to output M number of facets to the first line.
+Then print information about facets to the next M lines.
+Each line should contain number of vertices in the facet
+and indices of vertices in counter-clockwise order.
+
+simple.cpp contains solution O(n^4)
+n2.cpp contains solution O(n^2)
+nlogn.cpp contains solution O(nlogn)
