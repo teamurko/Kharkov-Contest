@@ -4,6 +4,8 @@
 #include <vector>
 #include <iostream>
 #include <algorithm>
+#include <sstream>
+#include <string>
 
 class Edge
 {
@@ -59,6 +61,14 @@ public:
     }
 
     friend std::ostream& operator<<(std::ostream& out, const Facet& facet);
+
+    std::string str() const 
+    {
+        std::ostringstream out;
+        out << size() << " ";
+        out << this->operator[](0) << " " << this->operator[](1) << " " << this->operator[](2);
+        return out.str();
+    }
      
 private:
     Indices vertices_;                        
@@ -85,6 +95,7 @@ bool operator<(const Facet& facetA, const Facet& facetB)
             return facetA[i] < facetB[i];
         }
     }
+    return false;
 }
 
 

@@ -74,7 +74,7 @@ void solve()
 
 int main() 
 {
-    test();
+//    test();
     solve();
     return 0;
 }

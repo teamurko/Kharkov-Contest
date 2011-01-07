@@ -15,6 +15,35 @@ using namespace std;
 #define forn(i, n) for(size_t i = 0; i < static_cast<size_t>(n); ++i)
 #define forv(i, v) forn(i, v.size())
 
+bool isFacet(const Points& points, const Facet& facet) 
+{
+    Plane plane(points[facet[0]], points[facet[1]], points[facet[2]]);
+    forv(i, points) {
+        if (plane.signedDistance(points[i]) > constants::EPS) {
+            return false;
+        }
+    }
+    return true;
+}
+
+Facet findInitialFacetSimple(const Points& points) 
+{
+    forv(i, points) {
+        forn(j, i) {
+            forn(k, j) {
+                if (isFacet(points, makeFacet(i, j, k))) {
+                    return makeFacet(i, j, k);
+                }
+                if (isFacet(points, makeFacet(j, i, k))) {
+                    return makeFacet(j, i, k);
+                }
+            }
+        }
+    }
+    cerr << "Cannot find initial facet (simple)" << endl;
+    assert(false);
+}
+
 Facet findInitialFacet(const Points& points) 
 {
     size_t a = 0;
@@ -31,7 +60,7 @@ Facet findInitialFacet(const Points& points)
     forv(j, points) {
         if (j == a) continue;
         forv(i, points) {
-            if (i == a) continue;
+            if (i == a || i == j) continue;
             const Point ort2 = ortVector(points[a], points[i], points[j]);
             const Point ort2Normal = ort2 / ort2.length();
 
@@ -48,10 +77,30 @@ Facet findInitialFacet(const Points& points)
     return makeFacet(a, b, c);
 }
 
+void check(const Points& points, const Facet& facet)
+{
+    const Plane plane(points[facet[0]], points[facet[1]], points[facet[2]]);
+    forv(j, points) {
+        if (plane.signedDistance(points[j]) > constants::EPS) {
+            cerr << "Not a facet " + facet.str() << endl;
+            assert(false);
+        }
+    }
+}
+
+void check(const Points& points, const Facets& facets)
+{
+    forv(i, facets) {
+        check(points, facets[i]);
+    }
+}
+
 void convexHullWrapping(const Points& points, Facets* facets)
 {
     //facets are ordered counter-clockwise, first index is the least
-    Facet initialFacet = findInitialFacet(points);
+    Facet initialFacet = findInitialFacetSimple(points);
+    check(points, initialFacet);
+//    cerr << "Initial facet found " << initialFacet << endl;
     facets->push_back(initialFacet);
     set<Facet> used;
     used.insert(initialFacet);
@@ -79,9 +128,13 @@ void convexHullWrapping(const Points& points, Facets* facets)
                     bestIndex = j;
                 }                                        
             }
-            assert(bestIndex != numeric_limits<size_t>::max());
+            if (bestIndex == numeric_limits<size_t>::max()) {
+                cerr << "Index is not found" << endl;
+                assert(false);
+            }
             Facet adjFacet = makeFacet(edge.from(), edge.to(), bestIndex);
             if (!used.count(adjFacet)) {
+//                cerr << adjFacet << " size " << used.size() << endl;
                 used.insert(adjFacet);
                 queueFacets.push(adjFacet);
                 facets->push_back(adjFacet);
@@ -103,6 +156,7 @@ void solve()
 
     Facets answer;
     convexHullWrapping(points, &answer);
+    check(points, answer);
     sort(answer.begin(), answer.end());
 
     cout << answer.size() << endl;

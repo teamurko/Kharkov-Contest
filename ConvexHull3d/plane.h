@@ -25,15 +25,15 @@ public:
     double b() const { return b_; }
     double c() const { return c_; }
     double d() const { return d_; }
-    double signedDistance(const Point& point) 
+    double signedDistance(const Point& point) const
     {
         return a() * point.x() + b() * point.y() + c() * point.z() + d();
     }
-    bool contains(const Point& point) 
+    bool contains(const Point& point) const
     {
         return fabs(signedDistance(point)) < constants::EPS;    
     }
-    int sign(const Point& point) 
+    int sign(const Point& point) const
     {
         double distance = signedDistance(point);
         if (distance < -constants::EPS) {
