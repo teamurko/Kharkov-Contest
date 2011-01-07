@@ -146,9 +146,12 @@ public:
         return vertices_.size();
     }
 
-    void sort() 
+    void order() 
     {
-        std::sort(vertices_.begin(), vertices_.end());
+        size_t shift = static_cast<size_t>(
+                min_element(vertices_.begin(), vertices_.end()) 
+                        - vertices_.begin());
+        rotate(vertices_.begin(), vertices_.begin() + shift, vertices_.end());
     }
 
     friend ostream& operator<<(ostream& out, const Facet& facet);
@@ -187,7 +190,7 @@ Facet makeFacet(size_t a, size_t b, size_t c)
     facet.add(a);
     facet.add(b);
     facet.add(c);
-    facet.sort();
+    facet.order();
     return facet;
 }
 
