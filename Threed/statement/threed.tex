@@ -1,0 +1,58 @@
+\begin{problem}{2D to 3D}{threed.in}{threed.out}{10 seconds}{256 megabytes}
+
+Given three non-zero area convex polygons, one on each coordinate plane in space ($Oxy$, $Oyz$, $Ozx$), you need to check if there exists a set of points in space
+which has these three polygons (including their interiors) as its orthogonal projections to the
+coordinate planes.
+
+\InputFile
+The first line of the input file contains an integer $n_{xy}$, the number of points of
+the $Oxy$ polygon.
+The next $n_{xy}$ lines contain two integers each, denoting $x$ and $y$ coordinates of the vertices of the polygon, in either clockwise or counter-clockwise order.
+
+The next block of lines describes the $Oyz$ polygon in the same format (for coordinates, $y$ goes before $z$).
+The next block of lines describes the $Ozx$ polygon in the same format (for coordinates, $z$ goes before $x$).
+All coordinates don't exceed $10^6$ by absolute value, $3 \leq n_{xy}, n_{yz}, n_{zx} \leq 6000$.
+
+\OutputFile
+Output ``Yes'' (without quotes) if such set of points in space exists, and ``No'' (without quotes) otherwise.
+
+\Examples
+
+\begin{example}
+\exmp{4
+0 0
+0 1
+1 1
+1 0
+4
+0 0
+1 0
+1 2
+0 2
+4
+0 0
+2 0
+2 1
+0 1
+}{Yes
+}%
+\exmp{4
+0 0
+0 1
+1 1
+1 0
+4
+0 0
+0 1
+1 1
+1 0
+4
+0 0
+1 0
+1 1
+0 2
+}{No}%
+\end{example}
+
+
+\end{problem}

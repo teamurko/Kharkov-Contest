@@ -1,0 +1,1 @@
+for x in 11 12 13 14 15; do echo 100 | ./a.out > 10;  done;

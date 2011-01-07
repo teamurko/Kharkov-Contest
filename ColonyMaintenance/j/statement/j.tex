@@ -1,0 +1,187 @@
+\begin{problem}
+{Colony Maintenance}{j.in}{j.out}{2 seconds}{256 megabytes}
+
+It is the year of 2xxx. 
+Human beings have migrated out of the Earth and resided in space colonies. 
+Because of the severe environment of the space, which comes from cosmic rays and meteorites, those colonies have to be continuously repaired by maintenance robots. 
+In this problem, you are requested to write a program that calculates the shortest distance for a robot to move from the present point to the next repair point on a colony.
+
+Each colony can be modeled as a polycube, that is, one or more cubes of the same size all joined by their faces. 
+Note that, as forming a polycube, all cubes of each colony are connected. 
+This implies every cube has at least one face coincident with a face of another cube, except for colonies with a single cube. 
+The figure below illustrates a couple of example colonies.
+
+\begin{figure}[htbp]
+\vspace{+\baselineskip}
+\begin{center}
+\includegraphics[scale=.5]{j1.eps}
+\qquad
+\includegraphics[scale=.5]{j2.eps}
+\end{center}
+\vspace{-\baselineskip}
+\caption{Example colonies}
+\end{figure}
+
+The maintenance robot can move only on the surface of the polycubes, that is, on faces not in common with other cubes. 
+In addition, due to the structure of the colonies, move of the robot beyond a face is restricted to the following cases: 
+(a) the robot is moving between adjacent faces of the same cube; 
+(b) the robot is moving between adjacent faces of adjacent cubes; and 
+(c) the robot is moving along the inner side of an L-shape, namely, the robot is moving between adjacent faces of two cubes that have the common adjacent cube. 
+Here, adjacent faces denote those with the common edge, and adjacent cubes denote those with the common face.
+
+\begin{figure}[htbp]
+\vspace{+\baselineskip}
+\begin{center}
+\begin{tabular}{c@{\quad}c@{\quad}c}
+\includegraphics[scale=.5]{j3.eps} &
+\includegraphics[scale=.5]{j4.eps} &
+\includegraphics[scale=.5]{j5.eps} \\
+(a) & (b) & (c)
+\end{tabular}
+\end{center}
+\vspace{-\baselineskip}
+\caption{Possible moves}
+\end{figure}
+
+For the purpose of this problem, we consider an $xyz$-space (i.e. a three-dimensional space with the Cartesian coordinate system) where all cubes are placed in such a way that each edge is parallel to $x$-axis, $y$-axis, or $z$-axis. 
+Also, the edge length of the cubes is scaled to $100$.
+
+\InputFile
+
+The input has the following format:
+
+\begin{InputFormat}
+$n$
+$x_1$ $y_1$ $z_1$
+$\ldots$
+$x_n$ $y_n$ $z_n$
+$\mathit{sx}$ $\mathit{sy}$ $\mathit{sz}$ $\mathit{dx}$ $\mathit{dy}$ $\mathit{dz}$
+\end{InputFormat}
+
+$n$ is the number of cubes of a colony ($1 \le n \le 16$). 
+$(x_i,y_i,z_i)$ represents the coordinates of the center of the $i$-th cube, where each coordinate value is guaranteed to be a multiple of $100$ (i.e. the edge length of the cubes). 
+$(\mathit{sx},\mathit{sy},\mathit{sz})$ and $(\mathit{dx},\mathit{dy},\mathit{dz})$ represent the robot's present point and the next repair point respectively. 
+You may assume that these two points are always different and that neither of them lies on any edge.
+All coordinate values are integers between $-2000$ and $2000$ inclusive. 
+
+\OutputFile
+
+For each dataset, print the distance of the shortest route from the present point to the next repair point. 
+The distance may be printed with any number of digits after the decimal point, provided the absolute error does not exceed $10^{-8}$.
+
+\Examples
+
+\begin{example}
+\exmp{
+1
+0 0 0
+0 0 50 30 40 50
+}{
+50.0
+}%
+\exmp{
+1
+0 0 0
+50 0 0 0 50 0
+}{
+100.0
+}%
+\exmp{
+2
+0 0 0
+100 0 0
+0 0 50 100 0 50
+}{
+100.0
+}%
+\exmp{
+3
+0 0 0
+100 0 0
+0 100 0
+100 50 0 50 100 0
+}{
+100.0
+}%
+\end{example}
+
+\begin{example}
+\exmp{
+7
+0 0 0
+100 0 0
+-100 0 0
+0 100 0
+0 -100 0
+0 0 100
+0 0 -100
+150 0 0 -150 0 0
+}{
+416.2277660168
+}%
+\exmp{
+6
+0 0 0
+100 0 0
+0 100 0
+100 100 0
+0 0 100
+100 100 100
+100 0 50 0 100 50
+}{
+141.4213562373
+}%
+\exmp{
+6
+0 0 0
+100 0 0
+0 100 0
+100 100 0
+0 0 100
+100 100 100
+100 100 150 0 0 150
+}{
+316.2277660168
+}%
+\exmp{
+6
+0 0 0
+100 0 0
+0 100 0
+100 100 100
+100 0 100
+0 100 100
+0 0 50 100 100 50
+}{
+341.4213562373
+}%
+\exmp{
+8
+0 0 0
+-100 0 0
+-100 100 0
+-100 200 0
+0 200 0
+100 200 0
+100 200 100
+100 100 100
+0 0 50 100 100 50
+}{
+341.4213562373
+}%
+\end{example}
+
+\newpage
+
+The figure below shows how the robot will move in the last example:
+
+\begin{figure}[htbp]
+\vspace{+\baselineskip}
+\begin{center}
+\includegraphics[scale=.5]{j6.eps}
+\end{center}
+\vspace{-\baselineskip}
+\caption{The robot's move in the 6th case}
+\end{figure}
+
+\end{problem}
