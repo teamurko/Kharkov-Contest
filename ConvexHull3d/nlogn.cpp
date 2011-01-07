@@ -86,12 +86,21 @@ double det(double a, double b, double c, double d)
 class Line
 {
 public:
-    Line(const Point& a, const Point& b) :
-        a_(b.x() - a.x()), b_(a.y() - b.y()),
-        c_(-a_
+    Line(const Point& pointA, const Point& pointB) :
+        a_(pointB.x() - pointA.x()), b_(pointA.y() - pointB.y()),
+        c_(-a() * pointA.x() - b() * pointA.y()) {}
+
+    double a() const { return a_; }
+
+    double b() const { return b_; }
+
+    double c() const { return c_; }
+
+    double signedDistance(const Point& point) const 
     {
-                
+        return a() * point.x() + b() * point.y() + c();
     }
+
 private:
     double a_;
     double b_;
@@ -325,6 +334,12 @@ public:
         return result;        
     }
 
+    void clear() 
+    {
+        edges_.clear();
+        geometryById_.clear();
+    }
+
 private:
     Edges edges_;
     GeometryMap geometryById_;       
@@ -387,13 +402,23 @@ private:
     Point origin_;
 };
 
+bool turnsLeft(const Point& a, const Point& b, const Point& c)
+{
+    return det2(b-a, c-a) > constants::EPS;
+}
+
+bool sameLine(const Point& a, const Point& b, const Point& c)
+{
+    return fabs(det2(b-a, c-a)) < constants::EPS;
+}
+
 void convexHullSimple(Points points, Polyhedron* polyhedron, Polygon* polygon)
 {
     
 }
 
 // Polygons are convex, vertices are counter-clockwise ordered
-void merge(const Polygon& polygonA, const Polygon& polygonB, Polygon* result)
+Point merge(const Polygon& polygonA, const Polygon& polygonB, Polygon* result)
 {
     Points pa = polygonA.vertices();
     Points pb = polygonB.vertices();
@@ -413,17 +438,68 @@ void merge(const Polygon& polygonA, const Polygon& polygonB, Polygon* result)
 
     Point middlePoint = (db.front() + db.back()) / 2.0;
 
-    
-}
+    const Line line(innerPoint, middlePoint);
 
-bool turnsLeft(const Point& a, const Point& b, const Point& c)
-{
-    return det2(b-a, c-a) > constants::EPS;
-}
+    size_t firstIndexA = 0;
+    while (line.signedDistance(pa[firstIndexA]) > -constants::EPS) {
+        firstIndexA = (firstIndexA + 1) % pa.size();        
+    } 
+    while (line.signedDistance(pa[firstIndexA]) < - constants::EPS) {
+        firstIndexA = (firstIndexA + pa.size() - 1) % pa.size();
+    }
 
-bool sameLine(const Point& a, const Point& b, const Point& c)
-{
-    return fabs(det2(b-a, c-a)) < constants::EPS;
+    ++firstIndexA;
+    rotate(pa.begin(), pa.begin() + firstIndexA, pa.end());
+
+    if (fabs(line.signedDistance(pa.back())) < constants::EPS) {
+        pa.pop_back();
+    }
+
+    deque<Point> da;
+
+    forv(i, pa) {
+        da.push_back(pa[i]);
+    }
+
+    //da and db can be merged
+
+    bool pointRemoved;
+    do {  
+        pointRemoved = false;        
+        if (da.size() >= 2 && !turnLeft(db.back(), da[0], da[1])) {
+            da.pop_front();            
+            pointRemoved = true;
+        }
+        if (db.size() >= 2 && !turnLeft(db[db.size()-2], db.back(), da.front())) {
+            db.pop_back();
+            pointRemoved = true;
+        }
+        if (da.size() >= 2 && !turnLeft(da[da.size()-2], da.back(), db[0])) {   
+            da.pop_back();
+            pointRemoved = true;
+        }
+        if (db.size() >= 2 && !turnLeft(da.back(), db[0], db[1])) {
+            db.pop_front();
+            pointRemoved = true;
+        }
+    } while (pointRemoved);
+
+    result->clear();
+    forn(i, da.size()) {
+        if (i > 0) {
+            result->addEdge(da[i-1], da[i]);
+        }
+    } 
+    result->addEdge(da.back(), db.front());
+
+    forn(i, db.size()) {
+        if (i > 0) {
+            result->addEdge(db[i-1], db[i]);
+        }
+    }
+
+    result->addEdge(db.back(), da.front());
+    return da.back();
 }
 
 void convexHull2(Points points, Polygon* polygon)
@@ -467,11 +543,24 @@ void convexHull2(Points points, Polygon* polygon)
     }
 }
 
+//Points should be sorted lexicographically x, y, z
 void convexHull(const Points& points, Polyhedron* polyhedron, Polygon* polygon) 
 {
     if (points.size() <= 7) {
-                
+        convexHullSimple(points, polyhedron, polygon);
+        return;            
     }
+
+    Points pointsOne(points.begin(), points.begin() + points.size()/2),
+            pointsTwo(points.begin() + points.size()/2, points.end());
+    Polyhedron phdOne, phdTwo;
+    Polygon plgOne, plgTwo;
+    convexHull(pointsOne, &phdOne, &plgOne);
+    convexHull(pointsTwo, &phdTwo, &plgTwo);
+    Point startPoint = merge(plgOne, plgTwo, polygon);
+
+    size_t nextPointId = polygon->adjacentVertices(startPoint.id())[0];
+
 }
 
 
