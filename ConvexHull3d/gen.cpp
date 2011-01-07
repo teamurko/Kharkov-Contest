@@ -70,9 +70,9 @@ Point nextPoint()
     return Point(rnd.next(MINC, MAXC+1), rnd.next(MINC, MAXC+1), rnd.next(MINC, MAXC+1));
 }
 
-void randomSmall()
+void random(int from, int to)
 {
-    int n = rnd.next(6, 21);
+    int n = rnd.next(from, to);
     Point first = nextPoint();
     Point second = nextPoint();
     while (second == first) {   
@@ -161,9 +161,10 @@ int main(int argc, char** argv)
     if (test == 2) test2();
     if (test == 3) test3();
     if (test == 4) test4();
-    if (test <= 10) randomSmall();
+    if (test <= 10) random(6, 21);
     if (test == 11) test11();
     if (test == 12) test12();
+    if (test <= 17) random(21, 51);
     assert(false);
 
     return 0;

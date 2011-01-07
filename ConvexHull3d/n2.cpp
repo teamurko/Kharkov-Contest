@@ -54,24 +54,54 @@ Facet findInitialFacet(const Points& points)
     }
     Point ortNormal(-1, 0, 0);
 
-    size_t b = 0, c = 0;
+    size_t b = numeric_limits<size_t>::max();
     double bestCosine = -1;
 
     forv(j, points) {
         if (j == a) continue;
-        forv(i, points) {
-            if (i == a || i == j) continue;
-            const Point ort2 = ortVector(points[a], points[i], points[j]);
-            const Point ort2Normal = ort2 / ort2.length();
-
-            double cosine = scalarProduct(ort2Normal, ortNormal); 
-            if (fabs(cosine) > bestCosine) {
-                bestCosine = fabs(cosine);
-                b = i;
-                c = j;
-                if (cosine < 0) swap(b, c);
-            }
+        const Point vect = points[j] - points[a];
+        const Point vectNormal = vect / vect.length();
+        double cosine = scalarProduct(ortNormal, vectNormal);
+        if (cosine > bestCosine) {
+            bestCosine = cosine;
+            b = j;
         }
+    }
+
+    if (b == numeric_limits<size_t>::max()) {
+        cerr << "Cannot find initial facet: second vertex" << endl;
+        assert(false);
+    }
+
+    size_t c = numeric_limits<size_t>::max();
+
+    bestCosine = -1;
+    forv(i, points) {
+        if (i == a || i == b) continue;
+        const Point ort2 = ortVector(points[a], points[b], points[i]);
+//        cerr << "point " << a << " " << b << " " << i << " " << points[i] << endl;
+        const Point ort2Normal = ort2 / ort2.length();
+
+        double cosine = scalarProduct(ort2Normal, ortNormal); 
+//            cerr << i << " " << cosine << endl;
+ //           cerr << ort2Normal << endl;
+        if (fabs(cosine) > bestCosine) {
+            bestCosine = fabs(cosine);
+            c = i;
+        }
+    }
+
+    if (c == numeric_limits<size_t>::max()) {
+        cerr << "Cannot find initial facet" << endl;
+        assert(false);
+    }
+
+    {
+        const Point ort2 = ortVector(points[a], points[b], points[c]);
+        const Point ort2Normal = ort2 / ort2.length();
+
+        double cosine = scalarProduct(ort2Normal, ortNormal); 
+        if (cosine < 0) swap(b, c);
     }
 
     return makeFacet(a, b, c);
@@ -98,7 +128,7 @@ void check(const Points& points, const Facets& facets)
 void convexHullWrapping(const Points& points, Facets* facets)
 {
     //facets are ordered counter-clockwise, first index is the least
-    Facet initialFacet = findInitialFacetSimple(points);
+    Facet initialFacet = findInitialFacet(points);
     check(points, initialFacet);
 //    cerr << "Initial facet found " << initialFacet << endl;
     facets->push_back(initialFacet);
@@ -165,8 +195,22 @@ void solve()
     }
 }
 
+void test()
+{
+    Point a(0, 0, 0);
+    Point b(10, 0, 0);
+    Point c(0, 10, 0);
+    Point d(10, 10, 10);
+    Point e(5, 5, 10);
+    Point ort = ortVector(a, c, e);
+    Point ortNormal = ort / ort.length();
+    cerr << ortNormal << endl;
+    exit(0);
+}
+
 int main() 
 {
+//    test();
     solve();
     return 0;
 }
