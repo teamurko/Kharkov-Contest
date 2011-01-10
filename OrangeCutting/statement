@@ -1,0 +1,5 @@
+Given a ball of radius R.
+M planes pass through the center of the ball,
+cutting the ball in many pieces.
+Find volumes of these pieces,
+and output them in ascending order.
