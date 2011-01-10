@@ -1,0 +1,8 @@
+Given a set of square (circular) pyramids numbered from 1 to n. 
+You are on the top of the first pyramid. 
+You can fly from the top of one pyramid to the top of another.
+The trajectory of the flight should be a segment.
+You are not allowed to fly through pyramids, but
+you are allowed to touch them.
+You spend a fuel proportionally to length of a segment.
+You want to reach n-th pyramid spending least fuel possible.

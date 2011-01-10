@@ -1,3 +1,9 @@
+#include "point.h"
+#include "line.h"
+#include "plane.h"
+#include "facet.h"
+#include "utils.h"
+
 #include <iostream>
 #include <cmath>
 #include <vector>
@@ -9,340 +15,49 @@ using namespace std;
 #define forn(i, n) for(size_t i = 0; i < static_cast<size_t>(n); ++i)
 #define forv(i, v) forn(i, v.size())
 
-namespace constants
-{
-    const double EPS = 1e-7;
-}
-
-class Point
-{
-public:
-    Point() : x_(0), y_(0), z_(0) {}
-
-    Point(double x, double y, double z) :
-        x_(x), y_(y), z_(z) {}
-    
-    double x() const { return x_; }
-
-    double y() const { return y_; }
-
-    double z() const { return z_; }
-
-    double length() const 
-    {
-        return sqrt(x() * x() + y() * y() + z() * z());
-    }
-
-    double squaredLength() const
-    {
-        return x() * x() + y() * y() + z() * z();
-    }
-
-    size_t id() const { return id_; }
-
-    friend istream& operator>>(istream& in, Point& point); 
-private:
-    double x_;
-    double y_;
-    double z_;
-    size_t id_;
-};
-
-Point operator-(const Point& pointA, const Point& pointB)
-{
-    return Point(pointA.x() - pointB.x(), pointA.y() - pointB.y(),
-            pointA.z() - pointB.z());
-}
-
-Point operator+(const Point& pointA, const Point& pointB)
-{
-    return Point(pointA.x() + pointB.x(), pointA.y() + pointB.y(),
-            pointA.z() + pointB.z());
-}
-
-Point operator/(const Point& point, double divisor)
-{
-    return Point(point.x() / divisor(), point.y() / divisor, point.z() / divisor);
-}
-
-bool operator<(const Point& pointA, const Point& pointB) 
-{
-    if (pointA.x() != pointB.x()) {
-        return pointA.x() < pointB.x();
-    }
-    if (pointA.y() != pointB.y()) {
-        return pointA.y() < pointB.y();
-    }
-    return pointA.z() < pointB.z();
-}
-
-typedef vector<Point> Points;
-
-double det(double a, double b, double c, double d) 
-{
-    return a * d - b * c;
-}
-
-class Line
-{
-public:
-    Line(const Point& pointA, const Point& pointB) :
-        a_(pointB.x() - pointA.x()), b_(pointA.y() - pointB.y()),
-        c_(-a() * pointA.x() - b() * pointA.y()) {}
-
-    double a() const { return a_; }
-
-    double b() const { return b_; }
-
-    double c() const { return c_; }
-
-    double signedDistance(const Point& point) const 
-    {
-        return a() * point.x() + b() * point.y() + c();
-    }
-
-private:
-    double a_;
-    double b_;
-    double c_;
-};
-
-class Plane
-{
-public:
-    Plane(double a, double b, double c, double d) :
-        a_(a), b_(b), c_(c), d_(d) {}
-
-    Plane(const Point& pointA, const Point& pointB, const Point& pointC) 
-    {  
-        a_ = det(pointB.y() - pointA.y(), pointB.z() - pointA.z(),
-                pointC.y() - pointA.y(), pointC.z() - pointA.z());
-        b_ = -det(pointB.x() - pointA.x(), pointB.z() - pointA.z(),
-                pointC.x() - pointA.x(), pointC.z() - pointA.z());
-        c_ = det(pointB.x() - pointA.x(), pointB.y() - pointA.y(),
-                pointC.x() - pointA.x(), pointC.y() - pointA.y());
-        d_ = -a() * pointA.x() - b() * pointA.y() - c() * pointA.z();
-    }
-
-    double a() const { return a_; }
-    double b() const { return b_; }
-    double c() const { return c_; }
-    double d() const { return d_; }
-
-    double signedDistance(const Point& point) 
-    {
-        return a() * point.x() + b() * point.y() + c() * point.z() + d();
-    }
-
-    bool contains(const Point& point) 
-    {
-        return fabs(signedDistance(point)) < constants::EPS;    
-    }
-
-    int sign(const Point& point) 
-    {
-        double distance = signedDistance(point);
-        if (distance < -constants::EPS) {
-            return -1;
-        }
-        if (distance > constants::EPS) {
-            return 1;
-        }
-        return 0;
-    }
-
-private:
-    double a_;
-    double b_;
-    double c_;
-    double d_;
-};
-
-istream& operator>>(istream& in, Point& point)
-{
-    in >> point.x_ >> point.y_ >> point.z_;
-    return in;    
-} 
-
-void test() 
-{
-    {
-        Point A(0, 1, 2), B(3, 323, 234), C(32.23, 232, -234);
-        Plane plane(A, B, C);
-        assert(plane.contains(A));
-        assert(plane.contains(B));
-        assert(plane.contains(C));
-    }
-    {
-        Point A(0, 0, 0), B(1, 0, 0), C(0, 0, 1);
-        Plane plane(A, B, C);
-        assert(plane.contains(A));
-        assert(plane.contains(B));
-        assert(plane.contains(C));
-        forn(i, 100) {
-            assert(plane.contains(Point(2*i, 0, i)));
-        }
-    }
-    cout << "Tests are passed successfully" << endl;
-}
-
-class Facet
-{
-public:
-    typedef vector<size_t> Indices;
-
-    Facet() {}
-
-    Facet(const Indices& indices)
-    {
-        vertices_ = indices;
-    }
-
-    size_t operator[](size_t index) const
-    {
-        assert(index < size());
-        return vertices_[index];
-    }
-
-    void add(size_t vertexIndex) 
-    {
-        vertices_.push_back(vertexIndex);
-    }
-
-    size_t size() const
-    {
-        return vertices_.size();
-    }
-
-    void sort() 
-    {
-        std::sort(vertices_.begin(), vertices_.end());
-    }
-
-    friend ostream& operator<<(ostream& out, const Facet& facet);
-     
-private:
-    Indices vertices_;                        
-};
-
-typedef vector<Facet> Facets;
-
-ostream& operator<<(ostream& out, const Facet& facet)
-{
-    out << facet.size();
-    forn(i, facet.size()) {
-        out << " " << facet[i];
-    }
-    return out;
-}
-
-bool operator<(const Facet& facetA, const Facet& facetB)
-{
-    if (facetA.size() != facetB.size()) {
-        return facetA.size() < facetB.size();
-    }        
-    forn(i, facetA.size()) {
-        if (facetA[i] != facetB[i]) {
-            return facetA[i] < facetB[i];
-        }
-    }
-}
-
-
-Facet makeFacet(size_t a, size_t b, size_t c) 
-{
-    Facet facet;
-    facet.add(a);
-    facet.add(b);
-    facet.add(c);
-    facet.sort();
-    return facet;
-}
-
-class Edge
-{
-public:
-    Edge(size_t from, size_t to) : from_(from), to_(to) {}
-    size_t from() const { return from_; }
-    size_t to() const { return to_; }
-private:
-    size_t from_;
-    size_t to_;
-};
-
-bool operator<(const Edge& edgeA, const Edge& edgeB) 
-{
-    return edgeA.from() < edgeB.from() || 
-        (edgeA.from() == edgeB.from() &&
-         edgeA.to() < edgeB.to());
-}
-
-typedef set<Edge> Edges;
+typedef size_t Id;
+typedef std::vector<Id> Ids;
 
 class ConvexFigure 
 {
 public:
-    typedef map<size_t, Point> GeometryMap;
-
-    ConvexFigure() {}
+    typedef std::vector<std::vector<Id> > AdjacencyList;
+    ConvexFigure(const Points& points) : points_(points), 
+            graph_(std::vector<std::vector<Id> >(points.size())) {}
     virtual ~ConvexFigure() = 0;
 
-    void addEdge(const Point& from, const Point& to) 
+    void addEdge(Id from, Id to)
     {
-        addEdge(from.id(), to.id());
-        addGeometry(from);
-        addGeometry(to);
-    }
-
-    void addGeometry(const Point& point)
-    {
-        if (!geometryById_.count(point.id())) {
-            geometryById_.insert(make_pair(point.id(), point));
-        }
-    }
-
-    void addEdge(size_t from, size_t to)
-    {
-        edges_.insert(Edge(from, to));
+        graph_[from].push_back(to);
     }
 
     void addEdge(const Edge& edge)
     {
-        edges_.insert(edge);
+        graph_[edge.from()].push_back(edge.to());
     }
      
-    bool adjacent(size_t from, size_t to) const
+    bool adjacent(Id from, Id to) const
     {
-        return binary_search(edges_.begin(), edges_.end(), Edge(from, to));
+        forv(i, graph_[from]) {
+            if (grpah_[from][i] == to) return true;
+        }
+        return false;
     }
 
-    const Point& geometry(size_t id) const 
+    const std::vector<Id>& adjacentVertices(Id vertex) const 
     {
-        GeometryMap::const_iterator iter = 
-            geometryById_.find(id);
-        assert(iter != geometryById_.end());
-        return iter->second;
-    }
-
-    vector<size_t> adjacentVertices(size_t vertex) const 
-    {
-        Edges::const_iterator edgesIterator =
-            lower_bound(edges_.begin(), edges_.end(), Edge(vertex, 0));
-        vector<size_t> result;
-        while (edgesIterator != edges_.end() &&
-            edgesIterator->from() == vertex) result.push_back((*edgesIterator++).to());
-        return result;        
+        return grpah_[vertex];
     }
 
     void clear() 
     {
-        edges_.clear();
-        geometryById_.clear();
+        graph_.clear();
+        points_.clear();
     }
 
 private:
-    Edges edges_;
-    GeometryMap geometryById_;       
+    AdjacencyList graph_;
+    const Points points_;       
 };
 
 class Polyhedron: public ConvexFigure
@@ -360,28 +75,11 @@ public:
     virtual ~Polygon() {}
     Points vertices() const
     {
-        Points result(1, anyVertex());
-        Points pts;
-        for(pts = adjacentVertices(result.back().id()); 
-            !pts.empty() && pts[0].id() != result[0].id(); 
-            pts = adjacentVertices(result.back().id())) {
-            result.push_back(pts[0]);
-        }
-        return result;
+        return points_;
     }
 
-    Point anyVertex() const
-    {
-        assert(!edges_.empty());
-        return geometry(edges_[0].from());
-    }
 private:
 };
-
-double det2(const Point& pointA, const Point& pointB)
-{
-    return pointA.x() * pointB.y() - pointA.y() * pointB.x();
-}
 
 class PointsComparator
 {
@@ -402,31 +100,116 @@ private:
     Point origin_;
 };
 
-bool turnsLeft(const Point& a, const Point& b, const Point& c)
+void convexHull2(Points points, Polygon* polygon)
 {
-    return det2(b-a, c-a) > constants::EPS;
+    assert(points.size() >= 3);
+    Points::iterator originIterator = 
+        min_element(points.begin(), points.end());
+    Point origin = *originIterator;
+    swap(*points.begin(), *originIterator);
+
+    PointsComparator comparator(origin); 
+
+    sort(points.begin()+1, points.end(), comparator); 
+    
+    typedef Points ConvexHull;
+
+    ConvexHull convexHull;
+    Points::const_iterator iter = points.begin();
+    forn(i, 2) {
+        convexHull.push_back(*iter++);
+    }
+    for ( ;iter != points.end(); ++iter) {
+        while (convexHull.size() >= 2 && 
+            !turnsLeft(convexHull[convexHull.size()-2],
+                       convexHull[convexHull.size()-1],
+                       *iter)) {
+            convexHull.pop_back();
+        }
+    }
+
+    //remove intermediate points
+    while (convexHull.size() >= 3 && 
+        sameLine(convexHull[0], convexHull.back(), convexHull[convexHull.size()-2])) {
+            convexHull.pop_back();
+    }
+    //TODO check if convexHull is ok, 
+    //e.g. it does not contain tree points on the same line
+
+    *polygon = Polygon(convexHull);
+    forn(i, convexHull) {
+        polygon->addEdge(i, (i+1)%convexHull.size());
+    }
 }
 
-bool sameLine(const Point& a, const Point& b, const Point& c)
+void addPoint(Points* points, const Point& point)
 {
-    return fabs(det2(b-a, c-a)) < constants::EPS;
+    forn(i, points->size()) {
+        if (points->[i].id() == point.id()) return;
+    }
+    points->push_back(point);
 }
 
 void convexHullSimple(Points points, Polyhedron* polyhedron, Polygon* polygon)
 {
-    
+    assert(points.size() <= 7);
+    convexHull2(points, polygon);
+    Points convexHull;
+    std::map<Id, Ids > graph;
+    forv(k, points) {
+        forn(j, k) {
+            forn(i, j) {
+                const Plane plane(points[i], points[j], points[k]);
+                if (below(points, plane)) {
+                    addPoint(convexHull, points[i]);
+                    addPoint(convexHull, points[j]);
+                    addPoint(convexHull, points[k]);                   
+                    graph[i].push_back(j);
+                    graph[j].push_back(k);
+                    graph[k].push_back(i);
+                }  
+            }
+        }
+    }            
+    forv(v, graph) {
+        for(size_t i = 1; i < graph[v].size(); ++i) {   
+            for(size_t j = i + 1; j < graph[v].size(); ++j) {
+                const Plane plane(points[v], points[graph[v][i-1]], points[grpah[v][j]]);
+                if (below(points, plane)) {
+                    swap(graph[v][i], graph[v][j]);
+                    break;
+                }
+            }
+        }
+        {
+            const Plane plane(points[v], points[graph[v][graph[v].size()-1]], points[graph[v][0]]);
+            assert(below(points, plane));
+        }
+    }
+    //TODO test
+    vector<Id> idMap(points.size());
+    forv(i, convexHull) {
+        idMap[convexHull[i].id()] = i;
+    }
+    *polyhedron = Polyhedron(convexHull);
+    forv(v, graph) {    
+        forv(j, graph[v]) {
+            Id u = graph[v][j];
+            polyhedron->addEdge(idMap[v], idMap[u]);
+        }
+    }
 }
 
 // Polygons are convex, vertices are counter-clockwise ordered
-Point merge(const Polygon& polygonA, const Polygon& polygonB, Polygon* result)
+std::pair<Id, Id> merge(const Polygon& polygonA, const Polygon& polygonB, Polygon* result)
 {
     Points pa = polygonA.vertices();
     Points pb = polygonB.vertices();
 
     Point innerPoint = (pa[0] + pa[1] + pa[2]) / 3.0;
 
-    size_t beginId = findTangent(pb, innerPoint, cmp1);
-    size_t endId = findTangent(pb, innerPoint, cmp2) + 1;
+    Id beginId = findTangent(pb, innerPoint, cmp1);
+    Id endId = findTangent(pb, innerPoint, cmp2) + 1;
 
     rotate(pb.begin(), pb.begin() + beginId, pb.end());
     endId = (endId + pb.size() - beginId) % pb.size();
@@ -440,7 +223,7 @@ Point merge(const Polygon& polygonA, const Polygon& polygonB, Polygon* result)
 
     const Line line(innerPoint, middlePoint);
 
-    size_t firstIndexA = 0;
+    Id firstIndexA = 0;
     while (line.signedDistance(pa[firstIndexA]) > -constants::EPS) {
         firstIndexA = (firstIndexA + 1) % pa.size();        
     } 
@@ -484,64 +267,18 @@ Point merge(const Polygon& polygonA, const Polygon& polygonB, Polygon* result)
         }
     } while (pointRemoved);
 
-    result->clear();
-    forn(i, da.size()) {
-        if (i > 0) {
-            result->addEdge(da[i-1], da[i]);
-        }
+    Points mergedPoints(da.begin(), da.end());
+    mergedPoints.append(db.begin(), db.end());
+
+    *result = Polygon(mergedPoints);
+
+    forn(i, da.size()+db.size()) {
+        result->addEdge(i, (i+1) % (da.size() + db.size()));
     } 
-    result->addEdge(da.back(), db.front());
 
-    forn(i, db.size()) {
-        if (i > 0) {
-            result->addEdge(db[i-1], db[i]);
-        }
-    }
-
-    result->addEdge(db.back(), da.front());
-    return da.back();
+    return std::make_pair(da.size()-1, da.size());
 }
 
-void convexHull2(Points points, Polygon* polygon)
-{
-    assert(points.size() >= 3);
-    Points::iterator originIterator = 
-        min_element(points.begin(), points.end());
-    Point origin = *originIterator;
-    swap(*points.begin(), *originIterator);
-
-    PointsComparator comparator(origin); 
-
-    sort(points.begin()+1, points.end(), comparator); 
-    
-    typedef vector<Point> ConvexHull;
-
-    ConvexHull convexHull;
-    Points::const_iterator iter = points.begin();
-    forn(i, 2) {
-        convexHull.push_back(*iter++);
-    }
-    for ( ;iter != points.end(); ++iter) {
-        while (convexHull.size() >= 2 && 
-            !turnsLeft(convexHull[convexHull.size()-2],
-                       convexHull[convexHull.size()-1],
-                       *iter)) {
-            convexHull.pop_back();
-        }
-    }
-
-    //remove intermediate points
-    while (convexHull.size() >= 3 && 
-        sameLine(convexHull[0], convexHull.back(), convexHull[convexHull.size()-2])) {
-            convexHull.pop_back();
-    }
-    //TODO check if convexHull is ok, 
-    //e.g. it does not contain tree points on the same line
-
-    forv(i, convexHull) {
-        polygon->addEdge(convexHull[i].id(), convexHull[(i+1)%convexHull.size()].id());
-    }
-}
 
 //Points should be sorted lexicographically x, y, z
 void convexHull(const Points& points, Polyhedron* polyhedron, Polygon* polygon) 
@@ -557,9 +294,11 @@ void convexHull(const Points& points, Polyhedron* polyhedron, Polygon* polygon)
     Polygon plgOne, plgTwo;
     convexHull(pointsOne, &phdOne, &plgOne);
     convexHull(pointsTwo, &phdTwo, &plgTwo);
-    Point startPoint = merge(plgOne, plgTwo, polygon);
+    pair<Id, Id> vertices12 = merge(plgOne, plgTwo, polygon);
 
-    size_t nextPointId = polygon->adjacentVertices(startPoint.id())[0];
+    Id nextPointId = polygon->adjacentVertices(startPoint.id())[0];
+
+    //TODO make merge and removal of invisible facets
 
 }
 

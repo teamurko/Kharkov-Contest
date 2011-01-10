@@ -1,6 +1,8 @@
 #ifndef FACET_H_INCLUDED
 #define FACET_H_INCLUDED
 
+#include "plane.h"
+
 #include <vector>
 #include <iostream>
 #include <algorithm>
@@ -75,6 +77,22 @@ private:
 };
 
 typedef std::vector<Facet> Facets;
+
+bool below(const Points& points, const Plane& plane)
+{
+    forv(i, points) {
+        if (plane.signedDistance(points[i]) > constants::EPS) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool isFacet(const Points& points, const Facet& facet) 
+{
+    Plane plane(points[facet[0]], points[facet[1]], points[facet[2]]);
+    return below(points, plane);
+}
 
 std::ostream& operator<<(std::ostream& out, const Facet& facet)
 {

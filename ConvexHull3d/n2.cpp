@@ -15,17 +15,6 @@ using namespace std;
 #define forn(i, n) for(size_t i = 0; i < static_cast<size_t>(n); ++i)
 #define forv(i, v) forn(i, v.size())
 
-bool isFacet(const Points& points, const Facet& facet) 
-{
-    Plane plane(points[facet[0]], points[facet[1]], points[facet[2]]);
-    forv(i, points) {
-        if (plane.signedDistance(points[i]) > constants::EPS) {
-            return false;
-        }
-    }
-    return true;
-}
-
 Facet findInitialFacetSimple(const Points& points) 
 {
     forv(i, points) {

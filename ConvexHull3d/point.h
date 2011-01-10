@@ -11,6 +11,21 @@ double det(double a, double b, double c, double d)
     return a * d - b * c;
 }
 
+double det2(const Point& pointA, const Point& pointB)
+{
+    return det(pointA.x(), pointA.y(), pointB.x(), pointB.y());
+}
+
+bool turnsLeft(const Point& a, const Point& b, const Point& c)
+{
+    return det2(b-a, c-a) > constants::EPS;
+}
+
+bool sameLine(const Point& a, const Point& b, const Point& c)
+{
+    return fabs(det2(b-a, c-a)) < constants::EPS;
+}
+
 class Point
 {
 public:
