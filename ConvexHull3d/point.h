@@ -54,6 +54,12 @@ public:
 
     void setId(size_t id) { id_ = id; }
 
+    Point normal() const 
+    {   
+        double len = length();
+        return Point(x()/len, y()/len, z()/len);
+    }
+
     friend std::istream& operator>>(std::istream& in, Point& point); 
     friend std::ostream& operator<<(std::ostream& out, const Point& point);
 private:
@@ -115,7 +121,7 @@ Point vectorProduct(const Point& a, const Point& b)
 
 Point ortVector(const Point& a, const Point& b, const Point& c)
 {
-    return vectorProduct(b - a, c - a);
+    return vectorProduct(b - a, c - a).normal();
 }
 
 double scalarProduct(const Point& a, const Point& b)

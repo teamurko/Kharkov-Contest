@@ -39,14 +39,29 @@ public:
     bool adjacent(Id from, Id to) const
     {
         forv(i, graph_[from]) {
-            if (grpah_[from][i] == to) return true;
+            if (graph_[from][i] == to) return true;
         }
         return false;
     }
 
     const std::vector<Id>& adjacentVertices(Id vertex) const 
     {
-        return grpah_[vertex];
+        return graph_[vertex];
+    }
+
+    const Point& operator[](size_t index) const 
+    {
+        return points_[index];        
+    }
+
+    size_t indexOf(Id id) const 
+    {
+        forv(i, points_) {
+            if (points_[i].id() == id) {
+                return i;
+            }
+        }
+        return std::numeric_limits<size_t>::max();
     }
 
     void clear() 
@@ -186,6 +201,7 @@ void convexHullSimple(Points points, Polyhedron* polyhedron, Polygon* polygon)
             assert(below(points, plane));
         }
     }
+
     //TODO test
     vector<Id> idMap(points.size());
     forv(i, convexHull) {
@@ -296,9 +312,51 @@ void convexHull(const Points& points, Polyhedron* polyhedron, Polygon* polygon)
     convexHull(pointsTwo, &phdTwo, &plgTwo);
     pair<Id, Id> vertices12 = merge(plgOne, plgTwo, polygon);
 
-    Id nextPointId = polygon->adjacentVertices(startPoint.id())[0];
+//    Id nextPointId = polygon->adjacentVertices(startPoint.id())[0];
 
     //TODO make merge and removal of invisible facets
+
+    Id a1 = phdOne.indexOf(plgOne[vertices12.first].id());
+    Id b1 = phdTwo.indexOf(plgTwo[vertices12.second].id());
+    Ids boundaryOne(1, a1);
+    Ids boundaryTwo(1, b1);
+
+
+    Edges edges;
+    edges.push_back(Edge(a1, b1));
+    
+    Id closestId = findClosest(boundaryOne.back(), boundaryTwo.back(), 
+        ortVector(phdTwo[b1], phdOne[a1], phdOne[a1] + Point(0, 0, -1)));
+
+    if (phdOne.indexOf(closestId) != std::numeric_limits<size_t>::max()) {
+        boundaryOne.push_back(phdOne.indexOf(closestId));
+    } else {
+        assert(phdTwo.indexOf(closestId) != std::numeric_limits<size_t>::max());
+        boundaryTwo.push_back(phdTwo.indexOf(closestId));
+    }
+    edges.push_back(Edge(boundaryOne.back(), boundaryTwo.back()));
+
+    Point prevPoint = boundaryOne.size() == 2 ? phdOne[boundaryOne[0]] : phdTwo[boundaryTwo[0]];
+
+    while (boundaryOne.back() != boundaryOne[0] || 
+        boundaryTwo.back() != boundaryTwo[0]) {
+        const Plane plane(prevPoint, boundaryTwo.back(), boundaryOne.back());
+        const Point ort(ortVector(prevPoint, phdTwo[boundaryTwo.back()], phdOne[boundaryOne.back()]));
+        Id closestIdOne = findClosestOne(phdOne, boundaryOne.back(), boundaryTwo.back(), ort);
+        Id closestIdTwo = findClosestTwo(phdTwo, boundaryTwo.back(), boundaryOne.back(), ort);
+
+        if (scalar(ort, ortVector(phdOne[closestIdOne], phdOne[boundaryOne.back()],
+                                phdTwo[boundaryTwo.back()])) <
+            scalar(ort, ortVector(phdOne[boundaryOne.back()], phdTwo[boundaryTwo.back()],
+                                phdTwo[closestIdTwo]))) {
+            prevPoint = phdOne[boundaryOne.back()];
+            boundaryOne.push_back(closestIdOne);
+        }        
+        else {
+            prevPoint = phdTwo[boundaryTwo.back()];
+            boundaryTwo.push_back(closestIdTwo);
+        }
+    }
 
 }
 

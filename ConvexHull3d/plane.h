@@ -33,6 +33,10 @@ public:
     {
         return fabs(signedDistance(point)) < constants::EPS;    
     }
+    Point ort() const 
+    {
+        return Point(a(), b(), c());
+    }
     int sign(const Point& point) const
     {
         double distance = signedDistance(point);
