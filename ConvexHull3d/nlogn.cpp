@@ -410,25 +410,52 @@ std::pair<Id, Id> merge(const Polygon& polygonA, const Polygon& polygonB, Polygo
     return std::make_pair(da.size()-1, da.size());
 }
 
-
-//TODO
-Id findClosest(Id id, Id id2, Point p) 
-{
-    return 0;
-}
-
-
-//TODO
+//TODO refactor
 Id findClosestOne(const Polyhedron& polyhedron, Id id, const Point& point, const Point& ort)
 {
-    return 0;
+    const Ids& adj = polyhedron.adjacentVertices(id);
+    double best = -1;
+    Id result = std::numeric_limits<size_t>::max();
+    forv(i, adj) {
+        Id v = adj[i];
+        double scalar;
+        if ((scalar = scalarProduct(ortVector(polyhedron[id], point, polyhedron[v]), ort)) > best) {
+            best = scalar;
+            result = v;
+        }
+    }
+    assert(result != std::numeric_limits<size_t>::max());
+    return result;
 }
 
-
-//TODO
 Id findClosestTwo(const Polyhedron& polyhedron, Id id, const Point& point, const Point& ort)
 {
-    return 0;
+    const Ids& adj = polyhedron.adjacentVertices(id);
+    double best = -1;
+    Id result = std::numeric_limits<size_t>::max();
+    forv(i, adj) {
+        Id v = adj[i];
+        double scalar;
+        if ((scalar = scalarProduct(ortVector(polyhedron[id], polyhedron[v], point), ort)) > best) {
+            best = scalar;
+            result = v;
+        }
+    }
+    assert(result != std::numeric_limits<size_t>::max());
+    return result;
+}
+
+Id findClosest(const Polyhedron& pOne, const Polyhedron& pTwo, Id idOne, Id idTwo, const Point& ort) 
+{
+    Id one = findClosestOne(pOne, idOne, pTwo[idTwo], ort);
+    Id two = findClosestTwo(pTwo, idTwo, pOne[idOne], ort);
+    if (scalarProduct(ortVector(pOne[one], pOne[idOne], pTwo[idTwo]), ort) < 
+        scalarProduct(ortVector(pOne[idOne], pTwo[idTwo], pTwo[two]), ort)) {
+        return two;
+    }
+    else {
+        return one;
+    }
 }
 
 //Points should be sorted lexicographically x, y, z
@@ -460,7 +487,7 @@ void convexHull(const Points& points, Polyhedron* polyhedron, Polygon* polygon)
     Edges edges;
     edges.push_back(Edge(a1, b1));
     
-    Id closestId = findClosest(boundaryOne.back(), boundaryTwo.back(), 
+    Id closestId = findClosest(phdOne, phdTwo, boundaryOne.back(), boundaryTwo.back(), 
         ortVector(phdTwo[b1], phdOne[a1], phdOne[a1] + Point(0, 0, -1)));
 
     if (phdOne.indexOf(closestId) != std::numeric_limits<size_t>::max()) {
