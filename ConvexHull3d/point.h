@@ -11,21 +11,6 @@ double det(double a, double b, double c, double d)
     return a * d - b * c;
 }
 
-double det2(const Point& pointA, const Point& pointB)
-{
-    return det(pointA.x(), pointA.y(), pointB.x(), pointB.y());
-}
-
-bool turnsLeft(const Point& a, const Point& b, const Point& c)
-{
-    return det2(b-a, c-a) > constants::EPS;
-}
-
-bool sameLine(const Point& a, const Point& b, const Point& c)
-{
-    return fabs(det2(b-a, c-a)) < constants::EPS;
-}
-
 class Point
 {
 public:
@@ -69,13 +54,6 @@ private:
     size_t id_;
 };
 
-std::ostream& operator<<(std::ostream& out, const Point& point)
-{
-    out.setf(std::ios::fixed, std::ios::floatfield);  
-    out.precision(10);
-    out << point.x() << " " << point.y() << " " << point.z();
-}
-
 Point operator-(const Point& pointA, const Point& pointB)
 {
     return Point(pointA.x() - pointB.x(), pointA.y() - pointB.y(),
@@ -86,6 +64,28 @@ Point operator+(const Point& pointA, const Point& pointB)
 {
     return Point(pointA.x() + pointB.x(), pointA.y() + pointB.y(),
             pointA.z() + pointB.z());
+}
+
+double det2(const Point& pointA, const Point& pointB)
+{
+    return det(pointA.x(), pointA.y(), pointB.x(), pointB.y());
+}
+
+bool turnsLeft(const Point& a, const Point& b, const Point& c)
+{
+    return det2(b-a, c-a) > constants::EPS;
+}
+
+bool sameLine(const Point& a, const Point& b, const Point& c)
+{
+    return fabs(det2(b-a, c-a)) < constants::EPS;
+}
+
+std::ostream& operator<<(std::ostream& out, const Point& point)
+{
+    out.setf(std::ios::fixed, std::ios::floatfield);  
+    out.precision(10);
+    out << point.x() << " " << point.y() << " " << point.z();
 }
 
 Point operator/(const Point& point, double divisor)

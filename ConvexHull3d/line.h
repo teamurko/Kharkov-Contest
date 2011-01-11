@@ -25,5 +25,4 @@ private:
     double c_;
 };
 
-
 #endif //LINE_H_INCLUDED

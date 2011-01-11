@@ -7,9 +7,11 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <map>
 #include <set>
 #include <algorithm>
 #include <cstdlib>
+#include <deque>
 
 using namespace std;
 #define forn(i, n) for(size_t i = 0; i < static_cast<size_t>(n); ++i)
@@ -22,9 +24,12 @@ class ConvexFigure
 {
 public:
     typedef std::vector<std::vector<Id> > AdjacencyList;
+
+    ConvexFigure() {}
+
     ConvexFigure(const Points& points) : points_(points), 
             graph_(std::vector<std::vector<Id> >(points.size())) {}
-    virtual ~ConvexFigure() = 0;
+    virtual ~ConvexFigure() {}
 
     void addEdge(Id from, Id to)
     {
@@ -70,16 +75,80 @@ public:
         points_.clear();
     }
 
-private:
+    size_t size() const { return points_.size(); }
+
+protected:
     AdjacencyList graph_;
-    const Points points_;       
+    Points points_;       
 };
+
+void dfs(Id v, const ConvexFigure::AdjacencyList& graph, std::vector<bool>& used) 
+{
+    if (used[v]) return;
+    used[v] = true;
+    forv(i, graph[v]) dfs(graph[v][i], graph, used);
+}
 
 class Polyhedron: public ConvexFigure
 {
 public:
     Polyhedron() {}
+    Polyhedron(const Points& points) : ConvexFigure(points) {}
     virtual ~Polyhedron() {}
+
+    Ids recalc(Id source) 
+    {
+        std::vector<bool> used(size(), false);
+        dfs(source, graph_, used);
+        Ids mapIds(size(), 0);
+        for(size_t i = 1; i < size(); ++i) {
+            mapIds[i] = mapIds[i-1] + static_cast<size_t>(used[i-1]);
+        }
+        forv(i, graph_) {
+            forv(j, graph_[i]) {
+                graph_[i][j] = mapIds[graph_[i][j]];
+            }
+        }
+        size_t cur = 0;
+        forv(i, graph_) {
+            if (used[i]) {
+                graph_[cur++] = graph_[i];
+            }
+        }
+        graph_.resize(cur);
+        return mapIds;
+    }
+
+    void removeEdges(Id source, Id start, Id end) 
+    {
+        start = (start + 1) % graph_[source].size();
+        rotate(graph_[source].begin(), graph_[source].begin() + start, graph_[source].end());
+        end = (end + graph_[source].size() - start) % graph_[source].size();
+        graph_[source].erase(graph_[source].begin(), graph_[source].begin() + end);
+    }
+
+    void merge(const Polyhedron& polyhedron, const Edges& edges) 
+    {
+        size_t curSize = size();
+        forn(i, polyhedron.size()) {
+            points_.push_back(polyhedron[i]);
+            graph_.push_back(Ids());
+        }
+        
+        forv(i, polyhedron) {
+            const Ids& adj = polyhedron.adjacentVertices(i);
+            forv(j, adj) {
+                addEdge(i + curSize, adj[j] + curSize);
+            }
+        }
+        
+        forv(i, edges) {
+            const Edge& edge = edges[i];
+            addEdge(edge.from(), edge.to() + curSize);
+            addEdge(edge.to() + curSize, edge.from());
+        }
+    }
+
 private:
 };
 
@@ -87,6 +156,7 @@ class Polygon: public  ConvexFigure
 {
 public:     
     Polygon() {}
+    Polygon(const Points& points) : ConvexFigure(points) {}
     virtual ~Polygon() {}
     Points vertices() const
     {
@@ -152,7 +222,7 @@ void convexHull2(Points points, Polygon* polygon)
     //e.g. it does not contain tree points on the same line
 
     *polygon = Polygon(convexHull);
-    forn(i, convexHull) {
+    forn(i, convexHull.size()) {
         polygon->addEdge(i, (i+1)%convexHull.size());
     }
 }
@@ -160,7 +230,7 @@ void convexHull2(Points points, Polygon* polygon)
 void addPoint(Points* points, const Point& point)
 {
     forn(i, points->size()) {
-        if (points->[i].id() == point.id()) return;
+        if ((*points)[i].id() == point.id()) return;
     }
     points->push_back(point);
 }
@@ -170,15 +240,15 @@ void convexHullSimple(Points points, Polyhedron* polyhedron, Polygon* polygon)
     assert(points.size() <= 7);
     convexHull2(points, polygon);
     Points convexHull;
-    std::map<Id, Ids > graph;
+    std::map<Id, Ids> graph;
     forv(k, points) {
         forn(j, k) {
             forn(i, j) {
                 const Plane plane(points[i], points[j], points[k]);
                 if (below(points, plane)) {
-                    addPoint(convexHull, points[i]);
-                    addPoint(convexHull, points[j]);
-                    addPoint(convexHull, points[k]);                   
+                    addPoint(&convexHull, points[i]);
+                    addPoint(&convexHull, points[j]);
+                    addPoint(&convexHull, points[k]);                   
                     graph[i].push_back(j);
                     graph[j].push_back(k);
                     graph[k].push_back(i);
@@ -189,7 +259,7 @@ void convexHullSimple(Points points, Polyhedron* polyhedron, Polygon* polygon)
     forv(v, graph) {
         for(size_t i = 1; i < graph[v].size(); ++i) {   
             for(size_t j = i + 1; j < graph[v].size(); ++j) {
-                const Plane plane(points[v], points[graph[v][i-1]], points[grpah[v][j]]);
+                const Plane plane(points[v], points[graph[v][i-1]], points[graph[v][j]]);
                 if (below(points, plane)) {
                     swap(graph[v][i], graph[v][j]);
                     break;
@@ -216,6 +286,51 @@ void convexHullSimple(Points points, Polyhedron* polyhedron, Polygon* polygon)
     }
 }
 
+class Compare 
+{
+public:
+    Compare(const Point& point) : point_(point) {}
+    virtual bool operator()(const Point& p1, const Point& p2) const = 0;
+protected:
+    Point point_;
+};
+
+class CompareLeft: public Compare
+{
+public:
+    CompareLeft(const Point& point) : Compare(point) {}
+    virtual bool operator()(const Point& p1, const Point& p2) const
+    {
+        return turnsLeft(point_, p1, p2);
+    }
+};
+
+class CompareNotRight: public Compare
+{
+public:
+    CompareNotRight(const Point& point) : Compare(point) {}
+    virtual bool operator()(const Point& p1, const Point& p2) const
+    {
+        return !turnsLeft(point_, p1, p2);
+    }
+}; 
+
+
+Id findTangent(const Points& points, const Compare& comp)
+{
+    assert(points.size() >= 3);
+    size_t cur = 0, next = cur + 1;
+    while (comp(points[cur], points[next])) {
+        next = cur;
+        cur = (cur + points.size() - 1) % points.size();
+    }    
+    while (!comp(points[cur], points[next])) {
+        cur = next;
+        next = (next + 1) % points.size();
+    }
+    return cur;
+}
+
 // Polygons are convex, vertices are counter-clockwise ordered
 std::pair<Id, Id> merge(const Polygon& polygonA, const Polygon& polygonB, Polygon* result)
 {
@@ -224,8 +339,8 @@ std::pair<Id, Id> merge(const Polygon& polygonA, const Polygon& polygonB, Polygo
 
     Point innerPoint = (pa[0] + pa[1] + pa[2]) / 3.0;
 
-    Id beginId = findTangent(pb, innerPoint, cmp1);
-    Id endId = findTangent(pb, innerPoint, cmp2) + 1;
+    Id beginId = findTangent(pb, CompareLeft(innerPoint));
+    Id endId = findTangent(pb, CompareNotRight(innerPoint)) + 1;
 
     rotate(pb.begin(), pb.begin() + beginId, pb.end());
     endId = (endId + pb.size() - beginId) % pb.size();
@@ -265,26 +380,26 @@ std::pair<Id, Id> merge(const Polygon& polygonA, const Polygon& polygonB, Polygo
     bool pointRemoved;
     do {  
         pointRemoved = false;        
-        if (da.size() >= 2 && !turnLeft(db.back(), da[0], da[1])) {
+        if (da.size() >= 2 && !turnsLeft(db.back(), da[0], da[1])) {
             da.pop_front();            
             pointRemoved = true;
         }
-        if (db.size() >= 2 && !turnLeft(db[db.size()-2], db.back(), da.front())) {
+        if (db.size() >= 2 && !turnsLeft(db[db.size()-2], db.back(), da.front())) {
             db.pop_back();
             pointRemoved = true;
         }
-        if (da.size() >= 2 && !turnLeft(da[da.size()-2], da.back(), db[0])) {   
+        if (da.size() >= 2 && !turnsLeft(da[da.size()-2], da.back(), db[0])) {   
             da.pop_back();
             pointRemoved = true;
         }
-        if (db.size() >= 2 && !turnLeft(da.back(), db[0], db[1])) {
+        if (db.size() >= 2 && !turnsLeft(da.back(), db[0], db[1])) {
             db.pop_front();
             pointRemoved = true;
         }
     } while (pointRemoved);
 
     Points mergedPoints(da.begin(), da.end());
-    mergedPoints.append(db.begin(), db.end());
+    copy(db.begin(), db.end(), back_inserter(mergedPoints));
 
     *result = Polygon(mergedPoints);
 
@@ -295,6 +410,26 @@ std::pair<Id, Id> merge(const Polygon& polygonA, const Polygon& polygonB, Polygo
     return std::make_pair(da.size()-1, da.size());
 }
 
+
+//TODO
+Id findClosest(Id id, Id id2, Point p) 
+{
+    return 0;
+}
+
+
+//TODO
+Id findClosestOne(const Polyhedron& polyhedron, Id id, const Point& point, const Point& ort)
+{
+    return 0;
+}
+
+
+//TODO
+Id findClosestTwo(const Polyhedron& polyhedron, Id id, const Point& point, const Point& ort)
+{
+    return 0;
+}
 
 //Points should be sorted lexicographically x, y, z
 void convexHull(const Points& points, Polyhedron* polyhedron, Polygon* polygon) 
@@ -334,20 +469,20 @@ void convexHull(const Points& points, Polyhedron* polyhedron, Polygon* polygon)
         assert(phdTwo.indexOf(closestId) != std::numeric_limits<size_t>::max());
         boundaryTwo.push_back(phdTwo.indexOf(closestId));
     }
-    edges.push_back(Edge(boundaryOne.back(), boundaryTwo.back()));
 
     Point prevPoint = boundaryOne.size() == 2 ? phdOne[boundaryOne[0]] : phdTwo[boundaryTwo[0]];
 
     while (boundaryOne.back() != boundaryOne[0] || 
         boundaryTwo.back() != boundaryTwo[0]) {
-        const Plane plane(prevPoint, boundaryTwo.back(), boundaryOne.back());
+        edges.push_back(Edge(boundaryOne.back(), boundaryTwo.back()));
+        const Plane plane(prevPoint, phdTwo[boundaryTwo.back()], phdOne[boundaryOne.back()]);
         const Point ort(ortVector(prevPoint, phdTwo[boundaryTwo.back()], phdOne[boundaryOne.back()]));
-        Id closestIdOne = findClosestOne(phdOne, boundaryOne.back(), boundaryTwo.back(), ort);
-        Id closestIdTwo = findClosestTwo(phdTwo, boundaryTwo.back(), boundaryOne.back(), ort);
+        Id closestIdOne = findClosestOne(phdOne, boundaryOne.back(), phdTwo[boundaryTwo.back()], ort);
+        Id closestIdTwo = findClosestTwo(phdTwo, boundaryTwo.back(), phdOne[boundaryOne.back()], ort);
 
-        if (scalar(ort, ortVector(phdOne[closestIdOne], phdOne[boundaryOne.back()],
+        if (scalarProduct(ort, ortVector(phdOne[closestIdOne], phdOne[boundaryOne.back()],
                                 phdTwo[boundaryTwo.back()])) <
-            scalar(ort, ortVector(phdOne[boundaryOne.back()], phdTwo[boundaryTwo.back()],
+            scalarProduct(ort, ortVector(phdOne[boundaryOne.back()], phdTwo[boundaryTwo.back()],
                                 phdTwo[closestIdTwo]))) {
             prevPoint = phdOne[boundaryOne.back()];
             boundaryOne.push_back(closestIdOne);
@@ -357,7 +492,33 @@ void convexHull(const Points& points, Polyhedron* polyhedron, Polygon* polygon)
             boundaryTwo.push_back(closestIdTwo);
         }
     }
+    //removing invisible edges
 
+    boundaryOne.pop_back();
+    boundaryTwo.pop_back();
+
+    forv(i, boundaryOne) {
+        size_t prevId = (i + boundaryOne.size() - 1) % boundaryOne.size();
+        size_t nextId = (i + 1) % boundaryOne.size();
+        phdOne.removeEdges(boundaryOne[i], boundaryOne[prevId], boundaryOne[nextId]);
+    }
+
+    forv(i, boundaryTwo) {
+        size_t prevId = (i + boundaryTwo.size() - 1) % boundaryTwo.size();
+        size_t nextId = (i + 1) % boundaryTwo.size();
+        phdTwo.removeEdges(boundaryTwo[i], boundaryTwo[nextId], boundaryTwo[prevId]);
+    }
+
+    vector<Id> mapIdOne = phdOne.recalc(boundaryOne.back());
+    vector<Id> mapIdTwo = phdTwo.recalc(boundaryTwo.back());
+    forv(i, edges) {
+        edges[i].setFrom(mapIdOne[edges[i].from()]);
+        edges[i].setTo(mapIdTwo[edges[i].to()]);
+    }
+    
+    phdOne.merge(phdTwo, edges);
+
+    *polyhedron = phdOne;
 }
 
 
@@ -402,7 +563,6 @@ void solve()
 
 int main() 
 {
-    test();
     solve();
     return 0;
 }

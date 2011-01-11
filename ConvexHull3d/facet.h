@@ -15,6 +15,8 @@ public:
     Edge(size_t from, size_t to) : from_(from), to_(to) {}
     size_t from() const { return from_; }
     size_t to() const { return to_; }
+    void setFrom(size_t from) { from_ = from; }
+    void setTo(size_t to) { to_ = to; }
 private:
     size_t from_;
     size_t to_;
@@ -26,6 +28,8 @@ bool operator<(const Edge& edgeA, const Edge& edgeB)
         (edgeA.from() == edgeB.from() &&
          edgeA.to() < edgeB.to());
 }
+
+typedef std::vector<Edge> Edges;
 
 class Facet
 {
@@ -80,7 +84,7 @@ typedef std::vector<Facet> Facets;
 
 bool below(const Points& points, const Plane& plane)
 {
-    forv(i, points) {
+    for(size_t i = 0; i < points.size(); ++i) {
         if (plane.signedDistance(points[i]) > constants::EPS) {
             return false;
         }
