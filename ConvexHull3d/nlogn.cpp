@@ -9,6 +9,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <stack>
 #include <algorithm>
 #include <cstdlib>
 #include <deque>
@@ -76,6 +77,8 @@ public:
     }
 
     size_t size() const { return points_.size(); }
+
+    const AdjacencyList& graph() const { return graph_; }
 
 protected:
     AdjacencyList graph_;
@@ -548,6 +551,55 @@ void convexHull(const Points& points, Polyhedron* polyhedron, Polygon* polygon)
     *polyhedron = phdOne;
 }
 
+typedef std::vector<std::vector<bool> > Used;
+typedef std::vector<std::map<Id, Id> > InverseEdges;
+
+void dfs(Id prev, Id v, const ConvexFigure::AdjacencyList& graph, 
+    Used& used, const InverseEdges& ie, std::stack<Id>& obs, Facets* facets)
+{
+    Id cur = (prev + 1) % graph[v].size();
+    while (prev != cur) {
+        if (!used[v][cur]) {
+            used[v][cur] = true;
+            obs.push(graph[v][cur]);
+            dfs(ie[v].find(graph[v][cur])->second, graph[v][cur], graph, used, ie, obs, facets);
+        } 
+        else {
+            assert(!obs.empty());
+            Id top = obs.top();
+            obs.pop();
+            Ids ids;
+            ids.push_back(top);
+            while (obs.top() != top) {
+                ids.push_back(obs.top());
+                obs.pop();
+            }
+            facets->push_back(Facet(ids));
+            facets->back().order();
+        }
+        cur++;
+    }
+}
+
+void extractFacets(const Polyhedron& polyhedron, Facets* facets) 
+{
+    InverseEdges inverseEdges(polyhedron.size());
+
+    forn(i, polyhedron.size()) {
+        const Ids& adj = polyhedron.adjacentVertices(i);
+        forv(j, adj) {
+            inverseEdges[adj[j]][i] = j;
+        }
+    } 
+
+    Used used(polyhedron.size());
+    forv(i, used) {
+        used[i] = std::vector<bool>(polyhedron.adjacentVertices(i).size(), false);
+    }
+    std::stack<Id> observed;
+    observed.push(0);
+    dfs(0, 0, polyhedron.graph(), used, inverseEdges, observed, facets);
+}
 
 void solve() 
 {
@@ -560,7 +612,17 @@ void solve()
         points.push_back(point);      
     }       
 
+    sort(points.begin(), points.end());
+    
+    Polyhedron polyhedron;
+    Polygon polygon;
+    convexHull(points, &polyhedron, &polygon);
+
+
     Facets answer;
+
+    extractFacets(polyhedron, &answer);
+    /*
     forn(i, points.size()) {
         forn(j, i) {
             forn(k, j) {
@@ -580,6 +642,7 @@ void solve()
             }
         }
     }
+    */
 
     sort(answer.begin(), answer.end());
     cout << answer.size() << endl;
