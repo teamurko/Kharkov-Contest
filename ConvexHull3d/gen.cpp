@@ -124,10 +124,10 @@ void test11()
     points.push_back(Point(-20, 0, 0));
     points.push_back(Point(0, -20, 0));
     points.push_back(Point(100, 100, 0));
-    points.push_back(Point(0, 0, 0));
-    points.push_back(Point(0, 0, 500));
-    points.push_back(Point(1, 1, -500));
-    points.push_back(Point(5, 5, 2));
+    points.push_back(Point(0, 0, -10));
+    points.push_back(Point(0, 0, 467));
+    points.push_back(Point(1, 2, -500));
+    points.push_back(Point(5, 7, 2));
     print(points);
     exit(0);        
 }
@@ -137,15 +137,22 @@ void test12()
     Points points;
     points.push_back(Point(0, 0, 0));
     points.push_back(Point(500, 0, 0));
-    points.push_back(Point(0, 500, 0));
-    points.push_back(Point(0, 0, 500));
-    points.push_back(Point(499, 499, 499));
+    points.push_back(Point(0, 499, 0));
+    points.push_back(Point(0, 0, 498));
+    points.push_back(Point(480, 490, 499));
     points.push_back(Point(200, 200, -10));
     points.push_back(Point(200, -10, 200));
     points.push_back(Point(-10, 200, 200));
     points.push_back(Point(10, 11, 12));
     points.push_back(Point(2, 3, 20));
     print(points);
+    exit(0);
+}
+
+void test18() 
+{
+    Points points;
+
     exit(0);
 }
 
@@ -165,6 +172,7 @@ int main(int argc, char** argv)
     if (test == 11) test11();
     if (test == 12) test12();
     if (test <= 17) random(21, 51);
+    if (test == 18) test18();
     assert(false);
 
     return 0;
