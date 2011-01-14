@@ -5,9 +5,6 @@
 #include "facet.h"
 #include <vector>
 
-typedef size_t Id;
-typedef std::vector<Id> Ids;
-
 class ConvexFigure 
 {
 public:
@@ -108,22 +105,27 @@ public:
         size_t cur = 0;
         forv(i, graph_) {
             if (used[i]) {
-                graph_[cur++] = graph_[i];
+                graph_[cur] = graph_[i];
+                points_[cur++] = points_[i];
             }
         }
         graph_.resize(cur);
+        points_.resize(cur);
         return mapIds;
     }
 
     void removeEdges(Id source, Id start, Id end) 
     {
-        start = (start + 1) % graph_[source].size();
-        rotate(graph_[source].begin(), graph_[source].begin() + start, graph_[source].end());
-        end = (end + graph_[source].size() - start) % graph_[source].size();
-        graph_[source].erase(graph_[source].begin(), graph_[source].begin() + end);
+        Ids& edges = graph_[source];
+        Ids::iterator startIter = edges.begin();
+        while (*startIter != start) ++startIter;
+        rotate(edges.begin(), startIter+1, edges.end());
+        startIter = edges.begin();
+        while (*startIter != end) ++startIter;
+        edges.erase(edges.begin(), startIter);
     }
 
-    void merge(const Polyhedron& polyhedron, const Edges& edges) 
+    void merge(const Polyhedron& polyhedron, Edges edges) 
     {
         size_t curSize = size();
         forn(i, polyhedron.size()) {
@@ -131,17 +133,36 @@ public:
             graph_.push_back(Ids());
         }
         
-        forn(i, curSize) {
+        forv(i, polyhedron) {
             const Ids& adj = polyhedron.adjacentVertices(i);
             forv(j, adj) {
                 addEdge(i + curSize, adj[j] + curSize);
             }
         }
         
+        size_t shift = 0;
+        while (shift < edges.size() && edges[shift].to() == edges.back().to()) {
+            ++shift;
+        }
+        shift %= edges.size();
+        rotate(edges.begin(), edges.begin() + shift, edges.end());
+        forv(i, edges) {
+            const Edge& edge = edges[i];
+            addEdge(edge.to() + curSize, edge.from());
+        }
+        
+        std::reverse(edges.begin(), edges.end());
+
+        shift = 0;
+        while (shift < edges.size() && edges[shift].from() == edges.back().from()) {
+            ++shift;
+        }
+        shift %= edges.size();
+        rotate(edges.begin(), edges.begin() + shift, edges.end());
+
         forv(i, edges) {
             const Edge& edge = edges[i];
             addEdge(edge.from(), edge.to() + curSize);
-            addEdge(edge.to() + curSize, edge.from());
         }
     }
 

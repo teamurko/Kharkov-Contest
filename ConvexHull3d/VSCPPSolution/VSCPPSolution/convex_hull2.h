@@ -5,6 +5,50 @@
 #include <algorithm>
 #include <cassert>
 
+class Compare 
+{
+public:
+    Compare(const Point& point) : point_(point) {}
+    virtual bool operator()(const Point& p1, const Point& p2) const = 0;
+protected:
+    Point point_;
+};
+
+class CompareLeft: public Compare
+{
+public:
+    CompareLeft(const Point& point) : Compare(point) {}
+    virtual bool operator()(const Point& p1, const Point& p2) const
+    {
+        return turnsLeft(point_, p1, p2);
+    }
+};
+
+class CompareNotRight: public Compare
+{
+public:
+    CompareNotRight(const Point& point) : Compare(point) {}
+    virtual bool operator()(const Point& p1, const Point& p2) const
+    {
+        return !turnsLeft(point_, p1, p2);
+    }
+}; 
+
+Id findTangent(const Points& points, const Compare& comp)
+{
+    assert(points.size() >= 3);
+    size_t cur = 0, next = cur + 1;
+    while (comp(points[cur], points[next])) {
+        next = cur;
+        cur = (cur + points.size() - 1) % points.size();
+    }    
+    while (!comp(points[cur], points[next])) {
+        cur = next;
+        next = (next + 1) % points.size();
+    }
+    return cur;
+}
+
 class PointsComparator
 {
 public:

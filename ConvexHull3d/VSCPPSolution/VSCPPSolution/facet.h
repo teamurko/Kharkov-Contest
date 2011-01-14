@@ -10,17 +10,20 @@
 #include <cassert>
 #include <string>
 
+typedef size_t Id;
+typedef std::vector<Id> Ids;
+
 class Edge
 {
 public:
-    Edge(size_t from, size_t to) : from_(from), to_(to) {}
-    size_t from() const { return from_; }
-    size_t to() const { return to_; }
-    void setFrom(size_t from) { from_ = from; }
-    void setTo(size_t to) { to_ = to; }
+    Edge(Id from, Id to) : from_(from), to_(to) {}
+    Id from() const { return from_; }
+    Id to() const { return to_; }
+    void setFrom(Id from) { from_ = from; }
+    void setTo(Id to) { to_ = to; }
 private:
-    size_t from_;
-    size_t to_;
+    Id from_;
+    Id to_;
 };
 
 bool operator<(const Edge& edgeA, const Edge& edgeB) 
@@ -35,21 +38,19 @@ typedef std::vector<Edge> Edges;
 class Facet
 {
 public:
-    typedef std::vector<size_t> Indices;
-
     Facet() {}
-    Facet(const Indices& indices)
+    Facet(const Ids& indices)
     {
         vertices_ = indices;
     }
 
-    size_t operator[](size_t index) const
+    Id operator[](Id index) const
     {
         assert(index < size());
         return vertices_[index];
     }
 
-    void add(size_t vertexIndex) 
+    void add(Id vertexIndex) 
     {
         vertices_.push_back(vertexIndex);
     }
@@ -76,9 +77,16 @@ public:
         out << this->operator[](0) << " " << this->operator[](1) << " " << this->operator[](2);
         return out.str();
     }
+
+    void mapIds(const Ids& map) 
+    {
+        forv(i, vertices_) {
+            vertices_[i] = map[vertices_[i]];
+        }
+    }
      
 private:
-    Indices vertices_;                        
+    Ids vertices_;                        
 };
 
 typedef std::vector<Facet> Facets;

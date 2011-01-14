@@ -18,50 +18,6 @@
 
 using namespace std;
 
-class Compare 
-{
-public:
-    Compare(const Point& point) : point_(point) {}
-    virtual bool operator()(const Point& p1, const Point& p2) const = 0;
-protected:
-    Point point_;
-};
-
-class CompareLeft: public Compare
-{
-public:
-    CompareLeft(const Point& point) : Compare(point) {}
-    virtual bool operator()(const Point& p1, const Point& p2) const
-    {
-        return turnsLeft(point_, p1, p2);
-    }
-};
-
-class CompareNotRight: public Compare
-{
-public:
-    CompareNotRight(const Point& point) : Compare(point) {}
-    virtual bool operator()(const Point& p1, const Point& p2) const
-    {
-        return !turnsLeft(point_, p1, p2);
-    }
-}; 
-
-Id findTangent(const Points& points, const Compare& comp)
-{
-    assert(points.size() >= 3);
-    size_t cur = 0, next = cur + 1;
-    while (comp(points[cur], points[next])) {
-        next = cur;
-        cur = (cur + points.size() - 1) % points.size();
-    }    
-    while (!comp(points[cur], points[next])) {
-        cur = next;
-        next = (next + 1) % points.size();
-    }
-    return cur;
-}
-
 // Polygons are convex, vertices are counter-clockwise ordered
 std::pair<Id, Id> merge(const Polygon& polygonA, const Polygon& polygonB, Polygon* result)
 {
@@ -136,35 +92,20 @@ std::pair<Id, Id> merge(const Polygon& polygonA, const Polygon& polygonB, Polygo
     return std::make_pair(da.size()-1, da.size());
 }
 
-//TODO refactor
-Id findClosestOne(const Polyhedron& polyhedron, Id id, const Point& point, const Point& ort)
+Id findClosest(const Polyhedron& polyhedron, Id id, const Point& point, const Point& ort, bool reverse)
 {
-    const Ids& adj = polyhedron.adjacentVertices(id);
     double best = -1;
+    const Ids& adj = polyhedron.adjacentVertices(id);
     Id result = std::numeric_limits<size_t>::max();
+    double sign = 1.0;
+    if (reverse) {
+        sign = -1.0;
+    }
     forv(i, adj) {
         Id v = adj[i];
         if (point.id() == polyhedron[v].id()) continue;
         double scalar;
-        if ((scalar = scalarProduct(ortVector(polyhedron[id], point, polyhedron[v]), ort)) > best) {
-            best = scalar;
-            result = v;
-        }
-    }
-    assert(result != std::numeric_limits<size_t>::max());
-    return result;
-}
-
-Id findClosestTwo(const Polyhedron& polyhedron, Id id, const Point& point, const Point& ort)
-{
-    const Ids& adj = polyhedron.adjacentVertices(id);
-    double best = -1;
-    Id result = std::numeric_limits<size_t>::max();
-    forv(i, adj) {
-        Id v = adj[i];
-        if (polyhedron[v].id() == point.id()) continue;
-        double scalar;
-        if ((scalar = scalarProduct(ortVector(polyhedron[id], polyhedron[v], point), ort)) > best) {
+        if ((scalar = sign * scalarProduct(ortVector(polyhedron[id], point, polyhedron[v]), ort)) > best) {
             best = scalar;
             result = v;
         }
@@ -175,14 +116,14 @@ Id findClosestTwo(const Polyhedron& polyhedron, Id id, const Point& point, const
 
 Id findClosest(const Polyhedron& pOne, const Polyhedron& pTwo, Id idOne, Id idTwo, const Point& ort) 
 {
-    Id one = findClosestOne(pOne, idOne, pTwo[idTwo], ort);
-    Id two = findClosestTwo(pTwo, idTwo, pOne[idOne], ort);
+    Id one = findClosest(pOne, idOne, pTwo[idTwo], ort, false);
+    Id two = findClosest(pTwo, idTwo, pOne[idOne], ort, true);
     if (scalarProduct(ortVector(pOne[one], pOne[idOne], pTwo[idTwo]), ort) < 
         scalarProduct(ortVector(pOne[idOne], pTwo[idTwo], pTwo[two]), ort)) {
-        return pTwo[idTwo].id();
+        return pTwo[two].id();
     }
     else {
-        return pOne[idOne].id();
+        return pOne[one].id();
     }
 }
 
@@ -228,13 +169,13 @@ void convexHull(const Points& points, Polyhedron* polyhedron, Polygon* polygon)
     while (boundaryOne.back() != boundaryOne[0] || 
         boundaryTwo.back() != boundaryTwo[0]) {
         edges.push_back(Edge(boundaryOne.back(), boundaryTwo.back()));
-        const Plane plane(prevPoint, phdTwo[boundaryTwo.back()], phdOne[boundaryOne.back()]);
+   //     const Plane plane(prevPoint, phdTwo[boundaryTwo.back()], phdOne[boundaryOne.back()]);
         const Point ort(ortVector(prevPoint, phdTwo[boundaryTwo.back()], phdOne[boundaryOne.back()]));
-        Id closestIdOne = findClosestOne(phdOne, boundaryOne.back(), phdTwo[boundaryTwo.back()], ort);
-        Id closestIdTwo = findClosestTwo(phdTwo, boundaryTwo.back(), phdOne[boundaryOne.back()], ort);
+        Id closestIdOne = findClosest(phdOne, boundaryOne.back(), phdTwo[boundaryTwo.back()], ort, false);
+        Id closestIdTwo = findClosest(phdTwo, boundaryTwo.back(), phdOne[boundaryOne.back()], ort, true);
 
         if (scalarProduct(ort, ortVector(phdOne[closestIdOne], phdOne[boundaryOne.back()],
-                                phdTwo[boundaryTwo.back()])) <
+                                phdTwo[boundaryTwo.back()])) >
             scalarProduct(ort, ortVector(phdOne[boundaryOne.back()], phdTwo[boundaryTwo.back()],
                                 phdTwo[closestIdTwo]))) {
             prevPoint = phdOne[boundaryOne.back()];
@@ -251,15 +192,15 @@ void convexHull(const Points& points, Polyhedron* polyhedron, Polygon* polygon)
     boundaryTwo.pop_back();
 
     forv(i, boundaryOne) {
-        size_t prevId = (i + boundaryOne.size() - 1) % boundaryOne.size();
-        size_t nextId = (i + 1) % boundaryOne.size();
+        size_t nextId = (i + boundaryOne.size() - 1) % boundaryOne.size();
+        size_t prevId = (i + 1) % boundaryOne.size();
         phdOne.removeEdges(boundaryOne[i], boundaryOne[prevId], boundaryOne[nextId]);
     }
 
     forv(i, boundaryTwo) {
         size_t prevId = (i + boundaryTwo.size() - 1) % boundaryTwo.size();
         size_t nextId = (i + 1) % boundaryTwo.size();
-        phdTwo.removeEdges(boundaryTwo[i], boundaryTwo[nextId], boundaryTwo[prevId]);
+        phdTwo.removeEdges(boundaryTwo[i], boundaryTwo[prevId], boundaryTwo[nextId]);
     }
 
     Ids mapIdOne = phdOne.leaveReachedFrom(boundaryOne.back());
@@ -278,8 +219,7 @@ typedef std::vector<std::vector<bool> > Used;
 typedef std::vector<std::map<Id, Id> > InverseEdges;
 
 void dfs(Id prev, Id v, const ConvexFigure::AdjacencyList& graph, 
-    Used& used, const InverseEdges& ie, Ids& obs, const Ids& idMap, 
-    Facets* facets)
+    Used& used, const InverseEdges& ie, Ids& obs, Facets* facets)
 {
     Id cur = (prev + 1) % graph[v].size();
     bool foundFacet = true;
@@ -287,7 +227,7 @@ void dfs(Id prev, Id v, const ConvexFigure::AdjacencyList& graph,
         if (!used[v][cur]) {
             used[v][cur] = true;
             obs.push_back(graph[v][cur]);
-            dfs(ie[v].find(graph[v][cur])->second, graph[v][cur], graph, used, ie, obs, idMap, facets);
+            dfs(ie[v].find(graph[v][cur])->second, graph[v][cur], graph, used, ie, obs, facets);
             obs.pop_back();
             foundFacet = false;
         } 
@@ -297,6 +237,7 @@ void dfs(Id prev, Id v, const ConvexFigure::AdjacencyList& graph,
             Ids::iterator iter = obs.end()-1;
             assert(v == obs.back());
             while (*(--iter) != obs.back());
+            assert(*iter == obs.back());
             //Ids ids(iter, obs.end());
             //while (iter != obs.end()) ids.push_back(idMap[*(iter++)]);            
             //facets->push_back(Facet(ids));
@@ -310,7 +251,7 @@ void dfs(Id prev, Id v, const ConvexFigure::AdjacencyList& graph,
 void extractFacets(const Polyhedron& polyhedron, Facets* facets) 
 {
     InverseEdges inverseEdges(polyhedron.size());
-
+    
     forn(i, polyhedron.size()) {
         const Ids& adj = polyhedron.adjacentVertices(i);
         forv(j, adj) {
@@ -332,7 +273,12 @@ void extractFacets(const Polyhedron& polyhedron, Facets* facets)
         idMap[i] = polyhedron[i].id();
     }
 
-    dfs(0, 0, polyhedron.graph(), used, inverseEdges, observed, idMap, facets);
+    dfs(0, 0, polyhedron.graph(), used, inverseEdges, observed, facets);
+
+    forv(i, (*facets)) {
+        (*facets)[i].mapIds(idMap);
+    }
+    
 }
 
 void solve() 
