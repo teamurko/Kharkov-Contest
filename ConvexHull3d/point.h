@@ -81,6 +81,12 @@ bool sameLine(const Point& a, const Point& b, const Point& c)
     return fabs(det2(b-a, c-a)) < constants::EPS;
 }
 
+std::istream& operator>>(std::istream& in, Point& point)
+{
+    in >> point.x_ >> point.y_ >> point.z_;
+    return in;    
+} 
+
 std::ostream& operator<<(std::ostream& out, const Point& point)
 {
     out.setf(std::ios::fixed, std::ios::floatfield);  

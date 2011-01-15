@@ -22,6 +22,20 @@ public:
         graph_[from].push_back(to);
     }
 
+    void addEdges(Id source, Id startFrom, Edges::const_iterator begin, Edges::const_iterator end)
+    {
+        Ids& adj = graph_[source];
+        size_t start = 0;
+        while (start < adj.size() && adj[start] == startFrom) ++start;
+        if (start < adj.size()) {
+            ++start;
+        }
+        std::rotate(adj.begin(), adj.begin() + start, adj.end());
+        while (begin != end) {
+            adj.push_back((begin++)->from());
+        }
+    }
+
     void addEdge(const Edge& edge)
     {
         graph_[edge.from()].push_back(edge.to());
@@ -64,6 +78,8 @@ public:
     size_t size() const { return points_.size(); }
 
     const AdjacencyList& graph() const { return graph_; }
+
+    const Points& points() const { return points_; }
 
 protected:
     AdjacencyList graph_;
@@ -118,14 +134,20 @@ public:
     {
         Ids& edges = graph_[source];
         Ids::iterator startIter = edges.begin();
-        while (*startIter != start) ++startIter;
-        rotate(edges.begin(), startIter+1, edges.end());
-        startIter = edges.begin();
-        while (*startIter != end) ++startIter;
-        edges.erase(edges.begin(), startIter);
+        while (startIter != edges.end() && *startIter != start) ++startIter;
+        if (startIter == edges.end()) {
+            //TODO make tests for this case
+            edges.clear();
+        }
+        else {
+            rotate(edges.begin(), startIter+1, edges.end());
+            startIter = edges.begin();
+            while (*startIter != end) ++startIter;
+            edges.erase(edges.begin(), startIter);
+        }
     }
 
-    void merge(const Polyhedron& polyhedron, Edges edges) 
+    void merge(const Polyhedron& polyhedron, Edges edges, const Ids& boundaryOne, const Ids& boundaryTwo) 
     {
         size_t curSize = size();
         forn(i, polyhedron.size()) {
@@ -139,16 +161,31 @@ public:
                 addEdge(i + curSize, adj[j] + curSize);
             }
         }
-        
+
+        //TODO fix bug
         size_t shift = 0;
         while (shift < edges.size() && edges[shift].to() == edges.back().to()) {
             ++shift;
         }
         shift %= edges.size();
         rotate(edges.begin(), edges.begin() + shift, edges.end());
-        forv(i, edges) {
-            const Edge& edge = edges[i];
-            addEdge(edge.to() + curSize, edge.from());
+        Edges::const_iterator iter = edges.begin();
+        while (iter != edges.end()) {
+            Edges::const_iterator nextIter = iter;
+            while (nextIter != edges.end() && nextIter->to() == iter->to()) {
+                ++nextIter;
+            }
+            Id addAfter;
+            if (iter != edges.begin()) {
+                addAfter = (iter-1)->to();
+            }
+            else {
+                addAfter = edges.back().to();
+            }
+            addEdges(iter->to() + curSize, addAfter, iter, nextIter);
+            iter = nextIter;
+//            const Edge& edge = edges[i];
+//            addEdge(edge.to() + curSize, edge.from());
         }
         
         std::reverse(edges.begin(), edges.end());
@@ -165,6 +202,7 @@ public:
             addEdge(edge.from(), edge.to() + curSize);
         }
     }
+
 
 private:
 };

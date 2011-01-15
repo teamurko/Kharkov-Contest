@@ -247,7 +247,7 @@ void convexHullSimple(Points points, Polyhedron* polyhedron, Polygon* polygon)
     forv(k, points) {
         forn(j, k) {
             forn(i, j) {
-                const Plane plane(points[i], points[j], points[k]);
+                Plane plane(points[k], points[i], points[j]);
                 if (below(points, plane)) {
                     addPoint(&convexHull, points[i]);
                     addPoint(&convexHull, points[j]);
@@ -255,38 +255,108 @@ void convexHullSimple(Points points, Polyhedron* polyhedron, Polygon* polygon)
                     graph[i].push_back(j);
                     graph[j].push_back(k);
                     graph[k].push_back(i);
+//                    cerr << "BELOW" << endl;
                 }  
+                plane = Plane(points[k], points[j], points[i]);
+                if (below(points, plane)) {
+                    addPoint(&convexHull, points[i]);
+                    addPoint(&convexHull, points[k]);
+                    addPoint(&convexHull, points[j]);                   
+                    graph[i].push_back(k);
+                    graph[k].push_back(j);
+                    graph[j].push_back(i);
+//                    cerr << "BELOW" << endl;
+                }
             }
         }
-    }            
-    forv(v, graph) {
-        for(size_t i = 1; i < graph[v].size(); ++i) {   
-            for(size_t j = i + 1; j < graph[v].size(); ++j) {
-                const Plane plane(points[v], points[graph[v][i-1]], points[graph[v][j]]);
+    }
+
+    for(std::map<Id, Ids>::iterator vIter = graph.begin(); vIter != graph.end(); ++vIter) {
+        Id v = vIter->first;
+        Ids& adj = vIter->second;
+        for(size_t i = 1; i < adj.size(); ++i) {   
+            for(size_t j = i + 1; j < adj.size(); ++j) {
+                const Plane plane(points[v], points[adj[i-1]], points[adj[j]]);
                 if (below(points, plane)) {
-                    swap(graph[v][i], graph[v][j]);
+                    swap(adj[i], adj[j]);
                     break;
                 }
             }
         }
         {
-            const Plane plane(points[v], points[graph[v][graph[v].size()-1]], points[graph[v][0]]);
+            const Plane plane(points[v], points[adj.back()], points[adj[0]]);
             assert(below(points, plane));
         }
     }
 
+    //THINK
+    for(std::map<Id, Ids>::const_iterator vIter = graph.begin(); vIter != graph.end(); ++vIter) {
+        Id v = vIter->first;
+        const Ids& adj = vIter->second;
+        cout << "v = " << v << endl;
+        forv(i, adj) {
+            cout << " " << adj[i];
+        }
+        cout << endl;
+    }
+
+    /*
+    cerr << "START printing convex hull" << endl;
+    cerr << convexHull.size() << endl;
+    forv(i, convexHull) cerr << " " << convexHull[i];
+    cerr << "END printing convex hull" << endl;
+    */
     //TODO test
     vector<Id> idMap(points.size());
     forv(i, convexHull) {
-        idMap[convexHull[i].id()] = i;
-    }
-    *polyhedron = Polyhedron(convexHull);
-    forv(v, graph) {    
-        forv(j, graph[v]) {
-            Id u = graph[v][j];
-            polyhedron->addEdge(idMap[v], idMap[u]);
+        forv(j, points) {
+            if (points[j].id() == convexHull[i].id()) {
+                idMap[j] = i;
+            }
         }
     }
+    /*
+    cerr << "START printing idMap" << endl;
+    forv(i, idMap) {
+        cerr << idMap[i];
+        if (i + 1 == idMap.size()) cerr << endl;
+        else cerr << " ";
+    }
+    cerr << "DONE printing idMap" << endl;
+    */
+
+    cerr << "START creating polyhedron" << endl;
+    *polyhedron = Polyhedron(convexHull);
+    for(std::map<Id, Ids>::const_iterator vIter = graph.begin(); vIter != graph.end(); ++vIter) {
+        Id v = vIter->first;
+        const Ids& adj = vIter->second;
+        forv(j, adj) {
+            Id u = adj[j];
+//            cerr << "START add edge " << endl << idMap[v] << " " << idMap[u] << endl;
+            polyhedron->addEdge(idMap[v], idMap[u]);
+//            cerr << "DONE add edge" << endl;
+        }
+    }
+    cerr << "DONE creating polyhedron" << endl;
+
+    {
+    /*
+        cerr << "START printing polyhedron graph" << endl;
+        const ConvexFigure::AdjacencyList& graph = polyhedron->graph();
+        forv(v, graph) {
+            cerr << "v = " << v << " :";
+            forv(j, graph[v]) {
+                Id u = graph[v][j];
+                cerr << " " << u;
+            }
+            cerr << endl;
+        }
+        cerr << "DONE printing" << endl;
+    */
+    }
+
+
+
 }
 
 class Compare 
@@ -555,29 +625,44 @@ typedef std::vector<std::vector<bool> > Used;
 typedef std::vector<std::map<Id, Id> > InverseEdges;
 
 void dfs(Id prev, Id v, const ConvexFigure::AdjacencyList& graph, 
-    Used& used, const InverseEdges& ie, std::stack<Id>& obs, Facets* facets)
+    Used& used, const InverseEdges& ie, Ids& obs, Facets* facets)
 {
+    /*
+    cerr << "v = " << v << endl;
+    forv(i, graph[v]) {
+        cerr << " " << graph[v][i];
+    }
+    cerr << endl;
+    */
     Id cur = (prev + 1) % graph[v].size();
+    bool found = false;
     while (prev != cur) {
         if (!used[v][cur]) {
             used[v][cur] = true;
-            obs.push(graph[v][cur]);
+            obs.push_back(graph[v][cur]);
             dfs(ie[v].find(graph[v][cur])->second, graph[v][cur], graph, used, ie, obs, facets);
+            obs.pop_back();
         } 
-        else {
+        else if (!found) {
+            //TODO
+            found = true;
             assert(!obs.empty());
-            Id top = obs.top();
-            obs.pop();
+            Ids::const_iterator iter = obs.end()-1;
+            assert(v == obs.back());
+            while (*(--iter) != obs.back());
+
             Ids ids;
-            ids.push_back(top);
-            while (obs.top() != top) {
-                ids.push_back(obs.top());
-                obs.pop();
-            }
+            ++iter;
+            while (iter != obs.end()) ids.push_back(*(iter++));            
             facets->push_back(Facet(ids));
+//            facets->push_back(Facet(Ids(iter+1, obs.end())));
             facets->back().order();
+            forv(i, ids) cerr << ids[i] << " ";
+            cerr << endl;
+            obs.pop_back();
+            while (obs.back() == v) obs.pop_back();
         }
-        cur++;
+        cur = (cur + 1) % graph[v].size();
     }
 }
 
@@ -591,14 +676,30 @@ void extractFacets(const Polyhedron& polyhedron, Facets* facets)
             inverseEdges[adj[j]][i] = j;
         }
     } 
+    cerr << "Inverse done" << endl;
 
     Used used(polyhedron.size());
     forv(i, used) {
         used[i] = std::vector<bool>(polyhedron.adjacentVertices(i).size(), false);
     }
-    std::stack<Id> observed;
-    observed.push(0);
+    Ids observed;
+    observed.push_back(0);
+
+    const ConvexFigure::AdjacencyList& graph = polyhedron.graph();
+
+    /*
+    forv(i, graph) {
+        cerr << "V = " << i << endl;
+        forv(j, graph[i]) {
+            cerr << " " << graph[i][j];
+        }
+        cerr << endl;
+    }
+    */
+
+    cerr << "START dfs" << endl;
     dfs(0, 0, polyhedron.graph(), used, inverseEdges, observed, facets);
+    cerr << "DONE dfs" << endl;
 }
 
 void solve() 
@@ -609,6 +710,7 @@ void solve()
     forn(i, numPoints) {
         Point point;
         cin >> point;
+        point.setId(i);
         points.push_back(point);      
     }       
 
@@ -617,10 +719,12 @@ void solve()
     Polyhedron polyhedron;
     Polygon polygon;
     convexHull(points, &polyhedron, &polygon);
+    cerr << "DONE build convex hull" << endl;
 
 
     Facets answer;
 
+    cerr << "START extracting facets" << endl;
     extractFacets(polyhedron, &answer);
     /*
     forn(i, points.size()) {

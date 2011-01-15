@@ -7,7 +7,7 @@
 
 using namespace std;
 
-#define forn(i, n) for(int i = 0; i < int(n); ++i)
+#define forn(i, n) for(size_t i = 0; i < static_cast<size_t>(n); ++i)
 #define forv(i, v) forn(i, v.size())
 
 void print(const Points& points)
@@ -63,11 +63,45 @@ void test4()
     exit(0);
 }
 
-Point nextPoint()
+Point nextPoint(int minc = -500, int maxc = 500)
 {
-    const int MINC = -500;
-    const int MAXC = 500;
-    return Point(rnd.next(MINC, MAXC+1), rnd.next(MINC, MAXC+1), rnd.next(MINC, MAXC+1));
+    return Point(rnd.next(minc, maxc+1), rnd.next(minc, maxc+1), rnd.next(minc, maxc+1));
+}
+
+//no four points on the same plane
+bool check(const Points& points) 
+{
+    forv(i, points) {
+        forn(j, i) {
+            forn(k, j) {
+                Plane plane(points[i], points[j], points[k]);
+                forv(t, points) {
+                    if (t == i || t == j || t == k) continue;
+                    if (plane.contains(points[t])) {
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+    return true;
+}
+
+//checks if the last points is not contained in any plane build on three points 
+bool checkLast(const Points& points) 
+{
+    forv(i, points) {
+        if (i + 1 == points.size()) break;
+        forn(j, i) {
+            forn(k, j) {
+                Plane plane(points[i], points[j], points[k]);
+                if (plane.contains(points.back())) {
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
 }
 
 void random(int from, int to)
@@ -151,8 +185,35 @@ void test12()
 
 void test18() 
 {
+    //big tetrahedron
     Points points;
+    points.push_back(Point(-500, -500, -500));
+    points.push_back(Point(500, -500, -500));
+    points.push_back(Point(0, 500, -500));
+    points.push_back(Point(0, 0, 500));
+    print(points);
+    exit(0);
+}
 
+void test19()
+{
+    //tetrahedron with many randomly generated points inside
+    Points points;
+    points.push_back(Point(-500, -500, -500));
+    points.push_back(Point(500, -500, -500));
+    points.push_back(Point(0, 500, -500));
+    points.push_back(Point(0, 0, 500));
+    assert(check(points));
+    forn(i, 50) {
+        while (true) {
+            points.push_back(nextPoint(-70, 70));
+            if (checkLast(points)) {
+                break;
+            }
+            points.pop_back();
+        }
+    }
+    print(points);
     exit(0);
 }
 
@@ -173,6 +234,7 @@ int main(int argc, char** argv)
     if (test == 12) test12();
     if (test <= 17) random(21, 51);
     if (test == 18) test18();
+    if (test == 19) test19();
     assert(false);
 
     return 0;

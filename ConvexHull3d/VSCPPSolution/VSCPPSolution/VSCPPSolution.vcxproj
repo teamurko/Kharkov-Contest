@@ -15,6 +15,7 @@
     <ClInclude Include="convex_hull2.h" />
     <ClInclude Include="convex_hull_simple.h" />
     <ClInclude Include="facet.h" />
+    <ClInclude Include="graph.h" />
     <ClInclude Include="line.h" />
     <ClInclude Include="plane.h" />
     <ClInclude Include="point.h" />

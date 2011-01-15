@@ -6,7 +6,7 @@
 
 namespace constants
 {
-    const double EPS = 1e-7;
+    const double EPS = 1e-9;
 }
 
 #endif //UTILS_H_INCLUDED

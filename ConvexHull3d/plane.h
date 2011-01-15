@@ -55,10 +55,4 @@ private:
     double d_;
 };
 
-std::istream& operator>>(std::istream& in, Point& point)
-{
-    in >> point.x_ >> point.y_ >> point.z_;
-    return in;    
-} 
-
 #endif //PLANE_H_INCLUDED
