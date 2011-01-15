@@ -35,80 +35,6 @@ bool symmetric(ConvexFigure::AdjacencyList graph)
     return true;
 }
 
-// Polygons are convex, vertices are counter-clockwise ordered
-std::pair<Id, Id> merge(const Polygon& polygonA, const Polygon& polygonB, Polygon* result)
-{
-    Points pa = polygonA.vertices();
-    Points pb = polygonB.vertices();
-
-    Point innerPoint = (pa[0] + pa[1] + pa[2]) / 3.0;
-
-    Id beginId = findTangent(pb, CompareLeft(innerPoint));
-    Id endId = findTangent(pb, CompareNotRight(innerPoint)) + 1;
-
-    rotate(pb.begin(), pb.begin() + beginId, pb.end());
-    endId = (endId + pb.size() - beginId) % pb.size();
-
-    if (endId == 0) {
-        endId = pb.size();
-    }
-    deque<Point> db;
-    forn(i, endId) {
-        db.push_back(pb[i]);
-    }
-
-    Point middlePoint = (db.front() + db.back()) / 2.0;
-
-    Id firstIndexA = findTangent(pa, CompareLeft(middlePoint));
-    Id lastIndexA = findTangent(pa, CompareNotRight(middlePoint)) + 1;
-
-    rotate(pa.begin(), pa.begin() + firstIndexA, pa.end());
-    lastIndexA = (lastIndexA + pa.size() - firstIndexA) % pa.size();
-
-    if (lastIndexA == 0) {
-        lastIndexA = pa.size();
-    }
-
-    deque<Point> da;
-    forn(i, lastIndexA) {
-        da.push_back(pa[i]);
-    }
-
-    //da and db can be merged
-
-    bool pointRemoved;
-    do {  
-        pointRemoved = false;        
-        if (da.size() >= 2 && !turnsLeft(db.back(), da[0], da[1])) {
-            da.pop_front();            
-            pointRemoved = true;
-        }
-        if (db.size() >= 2 && !turnsLeft(db[db.size()-2], db.back(), da.front())) {
-            db.pop_back();
-            pointRemoved = true;
-        }
-        if (da.size() >= 2 && !turnsLeft(da[da.size()-2], da.back(), db[0])) {   
-            da.pop_back();
-            pointRemoved = true;
-        }
-        if (db.size() >= 2 && !turnsLeft(da.back(), db[0], db[1])) {
-            db.pop_front();
-            pointRemoved = true;
-        }
-    } while (pointRemoved);
-
-    Points mergedPoints(da.begin(), da.end());
-    copy(db.begin(), db.end(), back_inserter(mergedPoints));
-
-    *result = Polygon(mergedPoints);
-
-    forn(i, da.size()+db.size()) {
-        result->addEdge(i, (i+1) % (da.size() + db.size()));
-    } 
-
-    return std::make_pair(da.size()-1, da.size());
-}
-
 bool convexHalf(const Polyhedron& phd)
 {
     const ConvexFigure::AdjacencyList& graph = phd.graph();
@@ -170,6 +96,59 @@ Id findClosest(const Polyhedron& pOne, const Polyhedron& pTwo, Id idOne, Id idTw
     }
 }
 
+void buildTriangulation(const Points& points, const Polyhedron& phdOne, const Polyhedron& phdTwo, 
+    Id startIdOne, Id startIdTwo, Ids* boundaryOne, Ids* boundaryTwo, Edges* edges) 
+{
+    boundaryOne->push_back(startIdOne);
+    boundaryTwo->push_back(startIdTwo);
+
+    edges->push_back(Edge(startIdOne, startIdTwo));
+    
+    Id closestId = findClosest(phdOne, phdTwo, boundaryOne->back(), boundaryTwo->back(), 
+        ortVector(phdTwo[startIdTwo], phdOne[startIdOne], phdOne[startIdOne] + Point(0, 0, -1)));
+
+    //check on the same side from plane
+    {
+        Plane plane(phdTwo[startIdTwo], phdOne[startIdOne], phdOne[startIdOne] + Point(0, 0, -1));
+        assert(below(points, plane));
+    }
+
+    if (phdOne.indexOf(closestId) != std::numeric_limits<size_t>::max()) {
+        boundaryOne->push_back(phdOne.indexOf(closestId));
+    } else {
+        assert(phdTwo.indexOf(closestId) != std::numeric_limits<size_t>::max());
+        boundaryTwo->push_back(phdTwo.indexOf(closestId));
+    }
+
+    Point prevPoint = boundaryOne->size() == 2 ? phdOne[boundaryOne->at(0)] : phdTwo[boundaryTwo->at(0)];
+
+    while (boundaryOne->back() != boundaryOne->at(0) || 
+        boundaryTwo->back() != boundaryTwo->at(0)) {
+        edges->push_back(Edge(boundaryOne->back(), boundaryTwo->back()));
+        //check on the same side from plane
+        {
+            const Plane plane(prevPoint, phdTwo[boundaryTwo->back()], phdOne[boundaryOne->back()]);
+            assert(below(points, plane));
+        }
+        const Point ort(ortVector(prevPoint, phdTwo[boundaryTwo->back()], phdOne[boundaryOne->back()]));
+        Id closestIdOne = findClosest(phdOne, boundaryOne->back(), phdTwo[boundaryTwo->back()], ort, false);
+        Id closestIdTwo = findClosest(phdTwo, boundaryTwo->back(), phdOne[boundaryOne->back()], ort, true);
+
+        double scalarOne = scalarProduct(ort, ortVector(phdOne[closestIdOne], phdOne[boundaryOne->back()],
+                                phdTwo[boundaryTwo->back()]));
+        double scalarTwo = scalarProduct(ort, ortVector(phdOne[boundaryOne->back()], phdTwo[boundaryTwo->back()],
+                                phdTwo[closestIdTwo]));
+        if (scalarOne > scalarTwo) {
+            prevPoint = phdOne[boundaryOne->back()];
+            boundaryOne->push_back(closestIdOne);
+        }        
+        else {
+            prevPoint = phdTwo[boundaryTwo->back()];
+            boundaryTwo->push_back(closestIdTwo);
+        }
+    }
+}
+
 //Points should be sorted lexicographically x, y, z
 void convexHull(const Points& points, Polyhedron* polyhedron, Polygon* polygon) 
 {
@@ -186,61 +165,17 @@ void convexHull(const Points& points, Polyhedron* polyhedron, Polygon* polygon)
     Polygon plgOne, plgTwo;
     convexHull(pointsOne, &phdOne, &plgOne);
     convexHull(pointsTwo, &phdTwo, &plgTwo);
+
     pair<Id, Id> vertices12 = merge(plgOne, plgTwo, polygon);
 
     //merge and removal of invisible facets
 
     Id a1 = phdOne.indexOf((*polygon)[vertices12.first].id());
     Id b1 = phdTwo.indexOf((*polygon)[vertices12.second].id());
-    Ids boundaryOne(1, a1);
-    Ids boundaryTwo(1, b1);
 
-
+    Ids boundaryOne, boundaryTwo;
     Edges edges;
-    edges.push_back(Edge(a1, b1));
-    
-    Id closestId = findClosest(phdOne, phdTwo, boundaryOne.back(), boundaryTwo.back(), 
-        ortVector(phdTwo[b1], phdOne[a1], phdOne[a1] + Point(0, 0, -1)));
-    //check on the same side from plane
-    {
-        Plane plane(phdTwo[b1], phdOne[a1], phdOne[a1] + Point(0, 0, -1));
-        assert(below(points, plane));
-    }
-
-    if (phdOne.indexOf(closestId) != std::numeric_limits<size_t>::max()) {
-        boundaryOne.push_back(phdOne.indexOf(closestId));
-    } else {
-        assert(phdTwo.indexOf(closestId) != std::numeric_limits<size_t>::max());
-        boundaryTwo.push_back(phdTwo.indexOf(closestId));
-    }
-
-    Point prevPoint = boundaryOne.size() == 2 ? phdOne[boundaryOne[0]] : phdTwo[boundaryTwo[0]];
-
-    while (boundaryOne.back() != boundaryOne[0] || 
-        boundaryTwo.back() != boundaryTwo[0]) {
-        edges.push_back(Edge(boundaryOne.back(), boundaryTwo.back()));
-        //check on the same side from plane
-        {
-            const Plane plane(prevPoint, phdTwo[boundaryTwo.back()], phdOne[boundaryOne.back()]);
-            assert(below(points, plane));
-        }
-        const Point ort(ortVector(prevPoint, phdTwo[boundaryTwo.back()], phdOne[boundaryOne.back()]));
-        Id closestIdOne = findClosest(phdOne, boundaryOne.back(), phdTwo[boundaryTwo.back()], ort, false);
-        Id closestIdTwo = findClosest(phdTwo, boundaryTwo.back(), phdOne[boundaryOne.back()], ort, true);
-
-        double scalarOne = scalarProduct(ort, ortVector(phdOne[closestIdOne], phdOne[boundaryOne.back()],
-                                phdTwo[boundaryTwo.back()]));
-        double scalarTwo = scalarProduct(ort, ortVector(phdOne[boundaryOne.back()], phdTwo[boundaryTwo.back()],
-                                phdTwo[closestIdTwo]));
-        if (scalarOne > scalarTwo) {
-            prevPoint = phdOne[boundaryOne.back()];
-            boundaryOne.push_back(closestIdOne);
-        }        
-        else {
-            prevPoint = phdTwo[boundaryTwo.back()];
-            boundaryTwo.push_back(closestIdTwo);
-        }
-    }
+    buildTriangulation(points, phdOne, phdTwo, a1, b1, &boundaryOne, &boundaryTwo, &edges);
     //removing invisible edges
 
     boundaryOne.pop_back();
@@ -254,7 +189,6 @@ void convexHull(const Points& points, Polyhedron* polyhedron, Polygon* polygon)
     }
 
     Graph::writeToFile("rgraph1.gv", phdOne.graph());
-    
     Graph::writeToFile("graph2.gv", phdTwo.graph());
     forv(i, boundaryTwo) {
         size_t prevId = (i + boundaryTwo.size() - 1) % boundaryTwo.size();
@@ -287,11 +221,6 @@ void convexHull(const Points& points, Polyhedron* polyhedron, Polygon* polygon)
 typedef std::vector<std::vector<bool> > Used;
 typedef std::vector<std::map<Id, Id> > InverseEdges;
 
-void print(const Ids& ids) 
-{
-    forv(i, ids) cerr << " " << ids[i];
-    cerr << endl;
-}
 void dfs(Id prev, Id v, const ConvexFigure::AdjacencyList& graph, 
     Used& used, const InverseEdges& ie, Ids& obs, Facets* facets)
 {
@@ -300,7 +229,6 @@ void dfs(Id prev, Id v, const ConvexFigure::AdjacencyList& graph,
     bool foundFacet = true;
     while (prev != cur) {
         if (!used[v][cur]) {
-            cerr << "X " << v << endl;
             used[v][cur] = true;
             obs.push_back(graph[v][cur]);
             dfs(ie[v].find(graph[v][cur])->second, graph[v][cur], graph, used, ie, obs, facets);
@@ -310,7 +238,7 @@ void dfs(Id prev, Id v, const ConvexFigure::AdjacencyList& graph,
         else if (foundFacet) {
             foundFacet = false;
             assert(!obs.empty());
-            print(obs);
+            print<Id>(cerr, obs);
             Ids::iterator iter = obs.end()-1;
             assert(v == obs.back());
             while (*(--iter) != obs.back());
@@ -321,7 +249,6 @@ void dfs(Id prev, Id v, const ConvexFigure::AdjacencyList& graph,
             //facets->push_back(Facet(ids));
             facets->push_back(Facet(Ids(iter+1, obs.end())));
         }
-        cerr << "HI" << endl;
         cur = (cur + 1) % graph[v].size();
     }
 }
@@ -365,7 +292,6 @@ void extractFacets(const Polyhedron& polyhedron, Facets* facets)
         (*facets)[i].mapIds(idMap);
         (*facets)[i].order();
     }
-    
 }
 
 void solve() 

@@ -4,6 +4,8 @@
 #include "point.h"
 #include <algorithm>
 #include <cassert>
+#include <deque>
+#include <iterator>
 
 class Compare 
 {
@@ -126,5 +128,78 @@ void convexHull2(Points points, Polygon* polygon)
     }
 }
 
+// Polygons are convex, vertices are counter-clockwise ordered
+std::pair<Id, Id> merge(const Polygon& polygonA, const Polygon& polygonB, Polygon* result)
+{
+    Points pa = polygonA.vertices();
+    Points pb = polygonB.vertices();
+
+    Point innerPoint = (pa[0] + pa[1] + pa[2]) / 3.0;
+
+    Id beginId = findTangent(pb, CompareLeft(innerPoint));
+    Id endId = findTangent(pb, CompareNotRight(innerPoint)) + 1;
+
+    rotate(pb.begin(), pb.begin() + beginId, pb.end());
+    endId = (endId + pb.size() - beginId) % pb.size();
+
+    if (endId == 0) {
+        endId = pb.size();
+    }
+    std::deque<Point> db;
+    forn(i, endId) {
+        db.push_back(pb[i]);
+    }
+
+    Point middlePoint = (db.front() + db.back()) / 2.0;
+
+    Id firstIndexA = findTangent(pa, CompareLeft(middlePoint));
+    Id lastIndexA = findTangent(pa, CompareNotRight(middlePoint)) + 1;
+
+    rotate(pa.begin(), pa.begin() + firstIndexA, pa.end());
+    lastIndexA = (lastIndexA + pa.size() - firstIndexA) % pa.size();
+
+    if (lastIndexA == 0) {
+        lastIndexA = pa.size();
+    }
+
+    std::deque<Point> da;
+    forn(i, lastIndexA) {
+        da.push_back(pa[i]);
+    }
+
+    //da and db can be merged
+
+    bool pointRemoved;
+    do {  
+        pointRemoved = false;        
+        if (da.size() >= 2 && !turnsLeft(db.back(), da[0], da[1])) {
+            da.pop_front();            
+            pointRemoved = true;
+        }
+        if (db.size() >= 2 && !turnsLeft(db[db.size()-2], db.back(), da.front())) {
+            db.pop_back();
+            pointRemoved = true;
+        }
+        if (da.size() >= 2 && !turnsLeft(da[da.size()-2], da.back(), db[0])) {   
+            da.pop_back();
+            pointRemoved = true;
+        }
+        if (db.size() >= 2 && !turnsLeft(da.back(), db[0], db[1])) {
+            db.pop_front();
+            pointRemoved = true;
+        }
+    } while (pointRemoved);
+
+    Points mergedPoints(da.begin(), da.end());
+    std::copy(db.begin(), db.end(), back_inserter(mergedPoints));
+
+    *result = Polygon(mergedPoints);
+
+    forn(i, da.size()+db.size()) {
+        result->addEdge(i, (i+1) % (da.size() + db.size()));
+    } 
+
+    return std::make_pair(da.size()-1, da.size());
+}
 
 #endif //CH_2_H_INCLUDED
