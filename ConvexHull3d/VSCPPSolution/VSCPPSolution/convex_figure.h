@@ -4,6 +4,9 @@
 #include "point.h"
 #include "facet.h"
 #include <vector>
+#include <set>
+#include <iterator>
+#include <algorithm>
 
 class ConvexFigure 
 {
@@ -22,18 +25,33 @@ public:
         graph_[from].push_back(to);
     }
 
-    void addEdges(Id source, Id startFrom, Edges::const_iterator begin, Edges::const_iterator end)
+    void addEdges(Id source, const Ids& adding)
     {
         Ids& adj = graph_[source];
-        size_t start = 0;
-        while (start < adj.size() && adj[start] == startFrom) ++start;
-        if (start < adj.size()) {
-            ++start;
+        assert(adj[0] >= size());
+        Ids::iterator iter = adj.begin();
+        while (iter != adj.end() && *iter + size() != adj[0]) ++iter;
+        if (iter != adj.end()) {
+            std::rotate(adj.begin(), iter, adj.end());
         }
-        std::rotate(adj.begin(), adj.begin() + start, adj.end());
-        while (begin != end) {
-            adj.push_back((begin++)->from());
+        Ids merged;
+        Ids::const_iterator addIter = adding.begin();
+        iter = adj.begin();
+        while (addIter != adding.begin() && iter != adj.end()) {
+            assert(*addIter >= size());
+            while (iter != adj.end() && *iter + size() != *addIter) {
+                merged.push_back(*iter);
+                ++iter;
+            }
+            ++addIter;
+            while (addIter != adding.end() && *addIter < size()) {
+                merged.push_back(*addIter);
+                ++addIter;
+            }
         }
+        std::copy(iter, adj.end(), std::back_inserter(merged));
+        std::copy(addIter, adding.end(), std::back_inserter(merged));
+        adj = merged;
     }
 
     void addEdge(const Edge& edge)
@@ -147,8 +165,19 @@ public:
         }
     }
 
-    void merge(const Polyhedron& polyhedron, Edges edges, const Ids& boundaryOne, const Ids& boundaryTwo) 
+    //TODO refactoring
+    void merge(const Polyhedron& polyhedron, Edges edges) 
     {
+        //check edges
+        {
+            std::set<Id> used;
+            forv(i, edges) {
+                used.insert(edges[i].from());
+            }
+            forv(i, edges) {
+                assert(!used.count(edges[i].to()));
+            }
+        }
         size_t curSize = size();
         forn(i, polyhedron.size()) {
             points_.push_back(polyhedron[i]);
@@ -162,6 +191,103 @@ public:
             }
         }
 
+        //making edges so that edges[0].from() != edges.back().from() 
+        //provided that not all edges[i].from() are the same
+        {
+            Edges::iterator iter = edges.begin();
+            while (iter != edges.end() && iter->from() == edges[0].from()) {
+                ++iter;
+            }
+            if (iter != edges.end()) {
+                std::rotate(edges.begin(), iter, edges.end());
+            }
+        }
+
+        std::vector<Ids> addAdj(size());
+        //adding edges to the first polyhedron
+        Edges::const_iterator edgeIter = edges.begin();
+        for(;edgeIter != edges.end();) {
+            Edges::const_iterator edgeEnd = edgeIter;
+            Ids adj;
+            while (edgeEnd != edges.end() && edgeIter->from() == edgeEnd->from()) {
+                adj.push_back(edgeEnd->to());
+                edgeEnd++;
+            }
+            std::reverse(adj.begin(), adj.end());
+            Id source = edgeIter->from();
+            edgeIter = edgeEnd;
+            Id addAfter;
+            if (edgeIter == edges.end()) {
+                addAfter = edges[0].from();
+            } 
+            else {
+                addAfter = edgeIter->from();
+            }
+            addAdj[source].push_back(addAfter+size());
+            forv(j, adj) {
+                addAdj[source].push_back(adj[j]);
+            }
+        }
+
+        //making edges so that edges[0].to() != edges.back().to() 
+        //provided that not all edges[i].to() are the same
+        {
+            Edges::iterator iter = edges.begin();
+            while (iter != edges.end() && iter->from() == edges[0].from()) {
+                ++iter;
+            }
+            if (iter != edges.end()) {
+                std::rotate(edges.begin(), iter, edges.end());
+            }
+        }
+
+        //adding edges to the second polyhedron
+        edgeIter = edges.begin();
+        Id addAfter = edges.back().to();
+        for(;edgeIter != edges.end();) {
+            Edges::const_iterator edgeEnd = edgeIter;
+            Ids adj;
+            while (edgeEnd != edges.end() && edgeIter->to() == edgeEnd->to()) {
+                adj.push_back(edgeEnd->from());
+                edgeEnd++;
+            }
+            Id source = edgeIter->to();
+            addAdj[source].push_back(addAfter+size());
+            forv(j, adj) {
+                addAdj[source].push_back(adj[j]);
+            }
+            addAfter = edgeIter->to();
+            edgeIter = edgeEnd;
+        }
+
+        forv(i, addAdj) {
+            if (addAdj[i].size() > 0) {
+                addEdges(i, addAdj[i]);
+            }
+        }
+    }
+
+
+private:
+};
+
+class Polygon: public  ConvexFigure
+{
+public:     
+    Polygon() {}
+    Polygon(const Points& points) : ConvexFigure(points) {}
+    virtual ~Polygon() {}
+    Points vertices() const
+    {
+        return points_;
+    }
+
+private:
+};
+
+#endif //CONVEX_FIGURE_H_INCLUDED
+
+/*
         //TODO fix bug
         size_t shift = 0;
         while (shift < edges.size() && edges[shift].to() == edges.back().to()) {
@@ -201,24 +327,4 @@ public:
             const Edge& edge = edges[i];
             addEdge(edge.from(), edge.to() + curSize);
         }
-    }
-
-
-private:
-};
-
-class Polygon: public  ConvexFigure
-{
-public:     
-    Polygon() {}
-    Polygon(const Points& points) : ConvexFigure(points) {}
-    virtual ~Polygon() {}
-    Points vertices() const
-    {
-        return points_;
-    }
-
-private:
-};
-
-#endif //CONVEX_FIGURE_H_INCLUDED
+*/

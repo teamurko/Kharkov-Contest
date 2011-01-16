@@ -149,26 +149,15 @@ void buildTriangulation(const Points& points, const Polyhedron& phdOne, const Po
     }
 }
 
-//Points should be sorted lexicographically x, y, z
-void convexHull(const Points& points, Polyhedron* polyhedron, Polygon* polygon) 
+void merge(const Points& points, 
+    const Polyhedron& phdOne, 
+    const Polygon& plgOne, 
+    const Polyhedron& phdTwo,
+    const Polygon& plgTwo, 
+    Polyhedron* polyhedron, 
+    Polygon* polygon) 
 {
-    if (points.size() <= 7) {
-        convexHullSimple(points, polyhedron, polygon);
-        assert(symmetric(polyhedron->graph()));
-        assert(convex(*polyhedron));
-        return;            
-    }
-
-    Points pointsOne(points.begin(), points.begin() + points.size()/2),
-            pointsTwo(points.begin() + points.size()/2, points.end());
-    Polyhedron phdOne, phdTwo;
-    Polygon plgOne, plgTwo;
-    convexHull(pointsOne, &phdOne, &plgOne);
-    convexHull(pointsTwo, &phdTwo, &plgTwo);
-
     pair<Id, Id> vertices12 = merge(plgOne, plgTwo, polygon);
-
-    //merge and removal of invisible facets
 
     Id a1 = phdOne.indexOf((*polygon)[vertices12.first].id());
     Id b1 = phdTwo.indexOf((*polygon)[vertices12.second].id());
@@ -176,44 +165,58 @@ void convexHull(const Points& points, Polyhedron* polyhedron, Polygon* polygon)
     Ids boundaryOne, boundaryTwo;
     Edges edges;
     buildTriangulation(points, phdOne, phdTwo, a1, b1, &boundaryOne, &boundaryTwo, &edges);
+
     //removing invisible edges
 
-    boundaryOne.pop_back();
-    boundaryTwo.pop_back();
-
-    Graph::writeToFile("graph1.gv", phdOne.graph());
+//    Graph::writeToFile("graph1.gv", phdOne.graph());
+    *polyhedron = phdOne;
     forv(i, boundaryOne) {
         size_t nextId = (i + boundaryOne.size() - 1) % boundaryOne.size();
         size_t prevId = (i + 1) % boundaryOne.size();
-        phdOne.removeEdges(boundaryOne[i], boundaryOne[prevId], boundaryOne[nextId]);
+        polyhedron->removeEdges(boundaryOne[i], boundaryOne[prevId], boundaryOne[nextId]);
     }
 
-    Graph::writeToFile("rgraph1.gv", phdOne.graph());
-    Graph::writeToFile("graph2.gv", phdTwo.graph());
+//    Graph::writeToFile("rgraph1.gv", phdOne.graph());
+//    Graph::writeToFile("graph2.gv", phdTwo.graph());
+    Polyhedron other = phdTwo;
     forv(i, boundaryTwo) {
         size_t prevId = (i + boundaryTwo.size() - 1) % boundaryTwo.size();
         size_t nextId = (i + 1) % boundaryTwo.size();
-        phdTwo.removeEdges(boundaryTwo[i], boundaryTwo[prevId], boundaryTwo[nextId]);
+        other.removeEdges(boundaryTwo[i], boundaryTwo[prevId], boundaryTwo[nextId]);
     }
 
-    Graph::writeToFile("rgraph2.gv", phdTwo.graph());
+//    Graph::writeToFile("rgraph2.gv", phdTwo.graph());
     
-    Ids mapIdOne = phdOne.leaveReachedFrom(boundaryOne.back());
+    Ids mapIdOne = polyhedron->leaveReachedFrom(boundaryOne.back());
     assert(symmetric(phdOne.graph()));
-    assert(convexHalf(phdOne));
-    Graph::writeToFile("dgraph1.gv", phdOne.graph());
-    Ids mapIdTwo = phdTwo.leaveReachedFrom(boundaryTwo.back());
-    Graph::writeToFile("dgraph2.gv", phdTwo.graph());
+//    Graph::writeToFile("dgraph1.gv", phdOne.graph());
+    Ids mapIdTwo = other.leaveReachedFrom(boundaryTwo.back());
+//    Graph::writeToFile("dgraph2.gv", phdTwo.graph());
     assert(symmetric(phdTwo.graph()));
-    assert(convexHalf(phdTwo));
     forv(i, edges) {
         edges[i].setFrom(mapIdOne[edges[i].from()]);
         edges[i].setTo(mapIdTwo[edges[i].to()]);
     }
     
-    phdOne.merge(phdTwo, edges, boundaryOne, boundaryTwo);
+    polyhedron->merge(other, edges);
 
     *polyhedron = phdOne;
+}
+
+//Points should be sorted lexicographically x, y, z
+void convexHull(const Points& points, Polyhedron* polyhedron, Polygon* polygon) 
+{
+    if (points.size() <= 7) {
+        convexHullSimple(points, polyhedron, polygon);
+    } else {
+        Points pointsOne(points.begin(), points.begin() + points.size()/2),
+            pointsTwo(points.begin() + points.size()/2, points.end());
+        Polyhedron phdOne, phdTwo;
+        Polygon plgOne, plgTwo;
+        convexHull(pointsOne, &phdOne, &plgOne);
+        convexHull(pointsTwo, &phdTwo, &plgTwo);
+        merge(points, phdOne, plgOne, phdTwo, plgTwo, polyhedron, polygon);
+    }
     assert(symmetric(polyhedron->graph()));
     assert(convex(*polyhedron));
 }
