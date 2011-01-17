@@ -31,3 +31,17 @@ Phantom (n <= 1000)
 Orange cutting.
 Minkovsky.
 Intersection.
+
+
+TODO
+1) Orange cutting base.
+2) Intersection of two lines.
+3) Intersection of a line and a plane.
+4) Distance between two segments.
+5) Distance between a segment and a polyhedron.
+6) Find a plane dividing a set of points in two equal parts.
+7) Dijkstra on lines.
+8) Pyramids.
+9) Phantom (n <= 1000)
+10) Minkovsky.
+11) Intersection.

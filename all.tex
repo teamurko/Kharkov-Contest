@@ -1,0 +1,41 @@
+\documentclass[11pt,a4paper,oneside]{article}
+
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english,russian]{babel}
+\usepackage{olymp}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+%\usepackage{epigraph}
+
+\begin{document}
+
+\renewcommand{\t}[1]{\ifmmode{\mathtt{#1}}\else{\texttt{#1}}\fi}
+%\newcommand{\eps}{\varepsilon}
+%\renewcommand{\le}{\leqslant}
+%\renewcommand{\ge}{\geqslant}
+%\renewcommand{\phi}{\varphi}
+%\newcommand{\pow}{\^\relax}
+%\newcommand{\bs}{\mbox{$\backslash$}}
+%\def\bbZ{\mathbb{Z}}
+
+% Treat all pictures as MPS (metapost) when using PDFLaTeX tool
+%\ifx\pdftexversion\undefined
+%\else
+%  \DeclareGraphicsRule{*}{eps}{*}{}
+%\fi
+
+%\binoppenalty=10000
+%\relpenalty=10000
+
+\contest
+{ACM International Collegiate Programming Contest 2011}%
+{Stanislav Pak Contest}%
+{Sunday, January 13, 2011}%
+
+\newcommand{\inputproblem}[1]{\input #1/statement/#1.tex}
+
+\inputproblem{orange_cutting}
+
+\end{document}
