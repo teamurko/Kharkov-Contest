@@ -1,14 +1,15 @@
 #include "testlib.h"
 #include <iostream>
 #include <vector>
+#include <sstream>
 #include <cmath>
 
 struct Point
 {
-    double x, y, z;
+    long long x, y, z;
 };
 
-double det(double x, double y, double z, double w)
+long long det(long long x, long long y, long long z, long long w)
 {
     return x * w - y * z;
 }
@@ -21,17 +22,10 @@ struct Plane
         b = -det(p2.x-p1.x, p2.z-p1.z, p3.x-p1.x, p3.z-p1.z);
         c = det(p2.x-p1.x, p2.y-p1.y, p3.x-p1.x, p3.y-p1.y);
         d = -a * p1.x - b * p1.y - c * p1.z;
-        const double len = std::sqrt(a * a + b * b + c * c);
-        a /= len;
-        b /= len;
-        c /= len;
-        d /= len;
     }
     bool contains(const Point& point) const
     {
-        //TODO what eps to choose
-        const static double EPS = 1e-7;
-        return std::fabs(a * point.x + b * point.y + c * point.z + d) < EPS;
+        return a * point.x + b * point.y + c * point.z + d == 0;
     }
     double a, b, c, d;
 };
@@ -43,11 +37,11 @@ int main(int argc, char* argv[]) {
     std::vector<Point> points;
     for(size_t i = 0; i < n; ++i) {
         Point point;
-        point.x = inf.readDouble(-500, 500, "x coordinate");
+        point.x = inf.readInt(-500, 500, "x coordinate");
         inf.readSpace();
-        point.y = inf.readDouble(-500, 500, "y coordinate");
+        point.y = inf.readInt(-500, 500, "y coordinate");
         inf.readSpace();
-        point.z = inf.readDouble(-500, 500, "z coordinate");
+        point.z = inf.readInt(-500, 500, "z coordinate");
         points.push_back(point);
         inf.readEoln();
     }
@@ -60,10 +54,10 @@ int main(int argc, char* argv[]) {
                 for(int t = 0; t < n; ++t) {
                     if (t == i || t == j || t == k) continue;
                     if (plane.contains(points[t])) {
-                        std::cerr << k << " " << j << " " << i << " " << t << std::endl;
-                        exit(1);    
+                        std::stringstream message;
+                        message << "Four points on the same plane : " << k << " " << j << " " << i << " " << t;
+                        quitf(_fail, message.str().c_str()); 
                     }
-                    ensure(!plane.contains(points[t]));
                 }
             }
         }

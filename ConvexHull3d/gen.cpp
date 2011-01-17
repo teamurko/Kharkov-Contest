@@ -1,7 +1,4 @@
-#include "point.h"
-#include "plane.h"
 #include "testlib.h"
-#include "utils.h"
 
 #include <iostream>
 
@@ -9,6 +6,53 @@ using namespace std;
 
 #define forn(i, n) for(size_t i = 0; i < static_cast<size_t>(n); ++i)
 #define forv(i, v) forn(i, v.size())
+
+struct Point
+{
+    long long x, y, z;
+    Point() {}
+    Point(long long x_, long long y_, long long z_) : x(x_), y(y_), z(z_) {}
+};
+
+bool operator==(const Point& a, const Point& b)
+{
+    return a.x == b.x && a.y == b.y && a.z == b.z;
+}
+
+typedef std::vector<Point> Points;
+
+long long det(long long x, long long y, long long z, long long w)
+{
+    return x * w - y * z;
+}
+
+struct Plane
+{
+    Plane(const Point p1, const Point p2, const Point p3)
+    {
+        a = det(p2.y-p1.y, p2.z-p1.z, p3.y-p1.y, p3.z-p1.z);
+        b = -det(p2.x-p1.x, p2.z-p1.z, p3.x-p1.x, p3.z-p1.z);
+        c = det(p2.x-p1.x, p2.y-p1.y, p3.x-p1.x, p3.y-p1.y);
+        d = -a * p1.x - b * p1.y - c * p1.z;
+    }
+    bool contains(const Point& point) const
+    {
+        return a * point.x + b * point.y + c * point.z + d == 0;
+    }
+    long long a, b, c, d;
+};
+
+ostream& operator<<(ostream& out, const Point& p)
+{
+    out << p.x << " " << p.y << " " << p.z;
+    return out;
+}
+
+Point ortVector(const Point& a, const Point&b, const Point& c)
+{
+    Plane plane(a, b, c);
+    return Point(plane.a, plane.b, plane.c);
+}
 
 void print(const Points& points)
 {
@@ -65,7 +109,7 @@ void test4()
 
 Point nextPoint(int minc = -500, int maxc = 500)
 {
-    return Point(rnd.next(minc, maxc+1), rnd.next(minc, maxc+1), rnd.next(minc, maxc+1));
+    return Point(rnd.next(minc, maxc), rnd.next(minc, maxc), rnd.next(minc, maxc));
 }
 
 //no four points on the same plane
@@ -104,18 +148,18 @@ bool checkLast(const Points& points)
     return true;
 }
 
-void random(int from, int to)
+void random(int from, int to, int minc = -500, int maxc = 500)
 {
     int n = rnd.next(from, to);
-    Point first = nextPoint();
-    Point second = nextPoint();
+    Point first = nextPoint(minc, maxc);
+    Point second = nextPoint(minc, maxc);
     while (second == first) {   
-        second = nextPoint();
+        second = nextPoint(minc, maxc);
     }
-    Point third = nextPoint();
+    Point third = nextPoint(minc, maxc);
     Point zero(0, 0, 0);
     while (ortVector(first, second, third) == zero) {
-        third = nextPoint();
+        third = nextPoint(minc, maxc);
     }
 
     Points points;
@@ -127,7 +171,7 @@ void random(int from, int to)
         Point point;
         bool ok;
         do {
-            point = nextPoint();
+            point = nextPoint(minc, maxc);
             ok = true;
             forv(i, points) {
                 forn(j, i) {
@@ -229,12 +273,13 @@ int main(int argc, char** argv)
     if (test == 2) test2();
     if (test == 3) test3();
     if (test == 4) test4();
-    if (test <= 10) random(6, 21);
+    if (test <= 10) random(6, 20);
     if (test == 11) test11();
     if (test == 12) test12();
-    if (test <= 17) random(21, 51);
+    if (test <= 17) random(21, 40);
     if (test == 18) test18();
     if (test == 19) test19();
+    if (test <= 40) random(8, 70, -30, 30);
     assert(false);
 
     return 0;

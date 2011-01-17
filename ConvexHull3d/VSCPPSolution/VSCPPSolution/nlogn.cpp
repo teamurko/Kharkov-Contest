@@ -147,6 +147,12 @@ void buildTriangulation(const Points& points, const Polyhedron& phdOne, const Po
             boundaryTwo->push_back(closestIdTwo);
         }
     }
+    if (boundaryOne->size() > 1) {
+        boundaryOne->pop_back();
+    }
+    if (boundaryTwo->size() > 1) {
+        boundaryTwo->pop_back();
+    }
 }
 
 void merge(const Points& points, 
@@ -168,7 +174,7 @@ void merge(const Points& points,
 
     //removing invisible edges
 
-//    Graph::writeToFile("graph1.gv", phdOne.graph());
+    Graph::writeToFile("graph1.gv", phdOne.graph());
     *polyhedron = phdOne;
     forv(i, boundaryOne) {
         size_t nextId = (i + boundaryOne.size() - 1) % boundaryOne.size();
@@ -176,8 +182,8 @@ void merge(const Points& points,
         polyhedron->removeEdges(boundaryOne[i], boundaryOne[prevId], boundaryOne[nextId]);
     }
 
-//    Graph::writeToFile("rgraph1.gv", phdOne.graph());
-//    Graph::writeToFile("graph2.gv", phdTwo.graph());
+    Graph::writeToFile("rgraph1.gv", phdOne.graph());
+    Graph::writeToFile("graph2.gv", phdTwo.graph());
     Polyhedron other = phdTwo;
     forv(i, boundaryTwo) {
         size_t prevId = (i + boundaryTwo.size() - 1) % boundaryTwo.size();
@@ -185,22 +191,28 @@ void merge(const Points& points,
         other.removeEdges(boundaryTwo[i], boundaryTwo[prevId], boundaryTwo[nextId]);
     }
 
-//    Graph::writeToFile("rgraph2.gv", phdTwo.graph());
+    Graph::writeToFile("rgraph2.gv", phdTwo.graph());
     
     Ids mapIdOne = polyhedron->leaveReachedFrom(boundaryOne.back());
-    assert(symmetric(phdOne.graph()));
-//    Graph::writeToFile("dgraph1.gv", phdOne.graph());
+    assert(symmetric(polyhedron->graph()));
+    Graph::writeToFile("dgraph1.gv", phdOne.graph());
     Ids mapIdTwo = other.leaveReachedFrom(boundaryTwo.back());
-//    Graph::writeToFile("dgraph2.gv", phdTwo.graph());
-    assert(symmetric(phdTwo.graph()));
+    Graph::writeToFile("dgraph2.gv", phdTwo.graph());
+    assert(symmetric(other.graph()));
     forv(i, edges) {
         edges[i].setFrom(mapIdOne[edges[i].from()]);
         edges[i].setTo(mapIdTwo[edges[i].to()]);
     }
-    
-    polyhedron->merge(other, edges);
 
-    *polyhedron = phdOne;
+    /*
+    forv(i, edges) {
+        Id a = edges[i].from();
+        Id b = edges[i].to();
+        cerr << (*polyhedron)[a] << endl;
+        cerr << other[b] << endl;
+    }
+    */
+    polyhedron->merge(other, edges);
 }
 
 //Points should be sorted lexicographically x, y, z
@@ -217,6 +229,7 @@ void convexHull(const Points& points, Polyhedron* polyhedron, Polygon* polygon)
         convexHull(pointsTwo, &phdTwo, &plgTwo);
         merge(points, phdOne, plgOne, phdTwo, plgTwo, polyhedron, polygon);
     }
+    Graph::writeToFile("graph_all.gv", polyhedron->graph());
     assert(symmetric(polyhedron->graph()));
     assert(convex(*polyhedron));
 }
@@ -241,11 +254,11 @@ void dfs(Id prev, Id v, const ConvexFigure::AdjacencyList& graph,
         else if (foundFacet) {
             foundFacet = false;
             assert(!obs.empty());
-            print<Id>(cerr, obs);
+//            print<Id>(cerr, obs);
             Ids::iterator iter = obs.end()-1;
             assert(v == obs.back());
             while (*(--iter) != obs.back());
-            cerr << "iter " << *iter << endl;
+//            cerr << "iter " << *iter << endl;
             assert(*iter == obs.back());
             //Ids ids(iter, obs.end());
             //while (iter != obs.end()) ids.push_back(idMap[*(iter++)]);            
@@ -273,7 +286,7 @@ void extractFacets(const Polyhedron& polyhedron, Facets* facets)
     forn(i, polyhedron.size()) {
         const Ids& adj = polyhedron.adjacentVertices(i);
         forv(j, adj) {
-            assert(inverseEdges[i].find(adj[j])->second < adj.size());
+            assert(inverseEdges[i].find(adj[j])->second < polyhedron.adjacentVertices(adj[j]).size());
         }
     }
 
@@ -314,7 +327,7 @@ void solve()
     Polyhedron polyhedron;
     Polygon polygon;
     convexHull(points, &polyhedron, &polygon);
-    assert(convex(polyhedron));
+//    assert(convex(polyhedron));
     Graph::writeToFile("graph_all.gv", polyhedron.graph());
 
     Facets answer;

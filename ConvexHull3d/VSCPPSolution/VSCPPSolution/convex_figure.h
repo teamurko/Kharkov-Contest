@@ -28,21 +28,23 @@ public:
     void addEdges(Id source, const Ids& adding)
     {
         Ids& adj = graph_[source];
-        assert(adj[0] >= size());
+        assert(adding[0] >= size());
         Ids::iterator iter = adj.begin();
-        while (iter != adj.end() && *iter + size() != adj[0]) ++iter;
+        while (iter != adj.end() && *iter + size() != adding[0]) ++iter;
         if (iter != adj.end()) {
             std::rotate(adj.begin(), iter, adj.end());
         }
         Ids merged;
         Ids::const_iterator addIter = adding.begin();
         iter = adj.begin();
-        while (addIter != adding.begin() && iter != adj.end()) {
+        while (addIter != adding.end() && iter != adj.end()) {
             assert(*addIter >= size());
             while (iter != adj.end() && *iter + size() != *addIter) {
                 merged.push_back(*iter);
                 ++iter;
             }
+            if (iter == adj.end()) break;
+            merged.push_back(*iter++);
             ++addIter;
             while (addIter != adding.end() && *addIter < size()) {
                 merged.push_back(*addIter);
@@ -50,7 +52,11 @@ public:
             }
         }
         std::copy(iter, adj.end(), std::back_inserter(merged));
-        std::copy(addIter, adding.end(), std::back_inserter(merged));
+        for(; addIter != adding.end(); ++addIter) {
+            if (*addIter < size()) {
+                merged.push_back(*addIter);
+            }
+        }
         adj = merged;
     }
 
@@ -168,6 +174,9 @@ public:
     //TODO refactoring
     void merge(const Polyhedron& polyhedron, Edges edges) 
     {
+        forv(i, edges) {
+            edges[i].setTo(edges[i].to() + size());
+        }
         //check edges
         {
             std::set<Id> used;
@@ -233,7 +242,7 @@ public:
         //provided that not all edges[i].to() are the same
         {
             Edges::iterator iter = edges.begin();
-            while (iter != edges.end() && iter->from() == edges[0].from()) {
+            while (iter != edges.end() && iter->to() == edges[0].to()) {
                 ++iter;
             }
             if (iter != edges.end()) {
