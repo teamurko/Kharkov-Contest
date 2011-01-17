@@ -1,0 +1,6 @@
+There are n (1 <= n <= 100) lines in space.
+There is a caterpillar on one of the lines.
+It can move along the line, and switch to line,
+intersecting the current one.
+Initially it is on the first line.
+Find if the caterpillar can reach n-th line.

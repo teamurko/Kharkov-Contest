@@ -1,25 +1,33 @@
 This is a base of problems for Kharkiv winter camp on computer programming.
 The topic is geometry 3d.
 
+Each 4 hour contest should contains about 8 problems.
+
 Div 1.
-Find a plane dividing a set of points in two equal parts.
+Intersection of two lines.
 Find an intersection of a line and a plane.
-Find distance between two segments.
+Find distance between two segments (lines)
+Find distance between segment and polyhedron.
 Convex hull n^4.
 Dodecahedron.
 Phantom.
 
 Div 2.
+Find distance between segment and polyhedron.
+Find a plane dividing a set of points in two equal parts.
 Sniper.
 Convex hull n^2.
 Pyramids.
 Threed.
+Dijkstra on lines.
 Phantom (n <= 1000)
 
 Div 3.
+Find distance between segment and polyhedron.
+Pyramids.
 Convex hull nlog(n).
-Orange cutting.
 Phantom (n <= 1000)
-If two polyhedra intersects.
+--hard
+Orange cutting.
 Minkovsky.
 Intersection.
