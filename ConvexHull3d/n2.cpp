@@ -147,6 +147,7 @@ void convexHullWrapping(const Points& points, Facets* facets)
                     bestIndex = j;
                 }                                        
             }
+            assert(bestCosine < 1.0 - 1e-7);
             if (bestIndex == numeric_limits<size_t>::max()) {
                 cerr << "Index is not found" << endl;
                 assert(false);

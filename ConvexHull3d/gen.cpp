@@ -261,6 +261,18 @@ void test19()
     exit(0);
 }
 
+void maxtest()
+{
+    int n = 4;
+    Points points;
+    forn(i, n) {
+        points.push_back(Point(i, 2 * i, i * i));
+    }
+    print(points);
+    exit(0);
+}
+
+
 int main(int argc, char** argv) 
 {
     registerGen(argc, argv);
@@ -280,6 +292,10 @@ int main(int argc, char** argv)
     if (test == 18) test18();
     if (test == 19) test19();
     if (test <= 40) random(8, 70, -30, 30);
+    if (test <= 50) random(90, 100);
+    if (test == 51) maxtest();
+    if (test == 52) random(1000, 1000);
+    //TODO gen max tests
     assert(false);
 
     return 0;
