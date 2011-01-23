@@ -1,0 +1,60 @@
+\documentclass[11pt,a4paper,oneside]{article}
+
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english,russian]{babel}
+\usepackage{olymp}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{epigraph}
+
+
+\begin{document}
+\renewcommand{\t}[1]{\ifmmode{\mathtt{#1}}\else{\texttt{#1}}\fi}
+%\newcommand{\eps}{\varepsilon}
+%\renewcommand{\le}{\leqslant}
+%\renewcommand{\ge}{\geqslant}
+%\renewcommand{\phi}{\varphi}
+%\newcommand{\pow}{\^\relax}
+%\newcommand{\bs}{\mbox{$\backslash$}}
+%\def\bbZ{\mathbb{Z}}
+
+% Treat all pictures as MPS (metapost) when using PDFLaTeX tool
+%\ifx\pdftexversion\undefined
+%\else
+%  \DeclareGraphicsRule{*}{eps}{*}{}
+%\fi
+
+%\binoppenalty=10000
+%\relpenalty=10000
+
+%\renewcommand{\t}[1]{\mbox{\texttt{#1}}}
+%\newcommand{\s}[1]{\mbox{``\t{#1}''}}
+%\newcommand{\eps}{\varepsilon}
+%\renewcommand{\phi}{\varphi}
+%\newcommand{\smpht}{{\char 94}}
+
+%\newcommand{\Z}{\mathbb{Z}}
+%\renewcommand{\leq}{\leqslant}
+%
+%\renewcommand{\le}{\leqslant}
+%\renewcommand{\geq}{\geqslant}
+%\renewcommand{\ge}{\geqslant}
+
+
+\binoppenalty=10000
+\relpenalty=10000
+
+\createsection{\Note}{Note}
+
+\contest
+{Сборы программистов, Харьков, 2011}%
+{Контест Станислава Пака}%
+{Воскресенье, Февраль 13, 2011}%
+\newcommand{\inputproblem}[1]{\input #1.tex}
+
+\inputproblem{orange_cutting}
+\inputproblem{convex_hull3}
+
+\end{document}
