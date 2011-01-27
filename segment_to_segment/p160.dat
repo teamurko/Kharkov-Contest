@@ -1,0 +1,30 @@
+[*problem title*]
+Расстояние от отрезка до отрезка (3D)
+[*problem time, memory limits*]
+timex="1" memoryx="1024"
+[*problem input/output]
+input="standard" output="standard"
+[*problem defenition*]
+Даны два отрезка в пространстве (x1, y1, z1) - (x2, y2, z2) и (x3, y3, z3) - (x4, y4, z4). Найдите расстояние между отрезками.
+[*problem input specification*]
+Заданы целые (x1, y1, z1) - (x2, y2, z2) и (x3, y3, z3) - (x4, y4, z4). Координаты по модулю не превосходят 1000.
+[*problem output specification*]
+Выведите искомую величину c точностью не менее 6 знаков после десятичной точки.
+[*sample input*]
+0 0 0
+1 1 1
+0 0 1
+0 1 0
+[*sample output*]
+0.4082482905
+[*note*]
+ДЗ к 7-му занятию кружка СГУ.
+[*author*]
+Назаров С.И.
+[*source*]
+---
+[*date*]
+---
+[*end*]
+
+[*тест кириллицы*]

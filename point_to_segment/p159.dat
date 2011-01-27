@@ -1,0 +1,29 @@
+[*problem title*]
+Расстояние от отрезка до точки (3D)
+[*problem time, memory limits*]
+timex="1" memoryx="1024"
+[*problem input/output]
+input="standard" output="standard"
+[*problem defenition*]
+Дан отрезок в пространстве (x1, y1, z1) - (x2, y2, z2) и точка (x, y, z). Найдите расстояние от отрезка до точки.
+[*problem input specification*]
+Заданы целые x1 y1 z1 x2 y2 z2 x y z. Координаты по модулю не превосходят 1000.
+[*problem output specification*]
+Выведите искомую величину.
+[*sample input*]
+0 0 0
+1 1 1
+0 0 1
+[*sample output*]
+0.8164965809
+[*note*]
+ДЗ к 7-му занятию крудка СГУ.
+[*author*]
+Назаров С.И.
+[*source*]
+---
+[*date*]
+---
+[*end*]
+
+[*тест кириллицы*]
