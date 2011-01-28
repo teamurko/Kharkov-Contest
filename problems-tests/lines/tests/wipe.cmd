@@ -1,0 +1,1 @@
+del ?? ??.a ??.b input.txt output.txt *.exe *.obj
