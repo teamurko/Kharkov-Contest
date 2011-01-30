@@ -123,14 +123,20 @@ void testOneLine(int numCones, int minh, int maxh)
     int x = -500, y = -500;
     int minr = 1, maxr = 10;
     Cones cones;
+    int pr = 0;
+    bool first = true;
     while (numCones--)
     {
         int r = rnd.next(minr, maxr);
+        int shift = static_cast<int>((r+pr) / sqrt(2.0)) + 1;
+        if (!first) {
+            x += shift;     
+            y += shift;
+        }
+        first = false;
         assert(x <= 500 && y <= 500);
         cones.pb(Cone(Point(x, y), r, rnd.next(minh, maxh)));
-        int shift = static_cast<int>(r / sqrt(2.0)) + 1;
-        x += shift;
-        y += shift;
+        pr = r;        
     }
     printExit(cones);
 }
@@ -189,6 +195,7 @@ int main(int argc, char** argv)
 
     if (test <= 30) testRandom(100);
     if (test <= 40) testRandom(300);
+    if (test <= 100) testRandom(3);
     assert(false);
     return 0;
 }
