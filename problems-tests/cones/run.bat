@@ -1,14 +1,8 @@
 echo off
-for /l %%i in (1,1,6) do (
+for /l %%i in (1,1,40) do (
     echo ---------------------------- test %%i -----------------------------------
     echo generating...
-    gen_dense %%i > %%i
-    echo done
-    echo validating...
-    validator < %%i
-    echo done
-    echo running correct...
-    correct_sp < %%i > %%i.a
+    gen %%i > %%i
     echo done
     echo ----------------------------- end %%i -----------------------------------
 )

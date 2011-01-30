@@ -1,4 +1,4 @@
-﻿Build started 16.01.2011 22:05:50.
+﻿Build started 25.01.2011 8:15:13.
      1>Project "C:\Users\pakso\Desktop\Kharkov\Contest\ConvexHull3d\VSCPPSolution\VSCPPSolution\VSCPPSolution.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
          Creating "Debug\VSCPPSolution.unsuccessfulbuild" because "AlwaysCreate" was specified.
@@ -23,4 +23,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:03.33
+Time Elapsed 00:00:04.58

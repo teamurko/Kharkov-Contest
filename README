@@ -34,10 +34,12 @@ Intersection.
 
 
 TODO
-1) Orange cutting base.
-2) Intersection of two lines.
+1) Orange cutting base. +
+2a) Intersection of two lines (phantom). +
+2b) Mutual location of two lines in N-D. +
 3) Intersection of a line and a plane.
-4) Distance between two segments.
+4a) Distance between two segments. +
+4b) Distance between a segment and a point. +
 5) Distance between a segment and a polyhedron.
 6) Find a plane dividing a set of points in two equal parts.
 7) Dijkstra on lines.

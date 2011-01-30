@@ -56,6 +56,7 @@ bool check(const Points& points)
 }
 
 int main(int argc, char* argv[]) {
+    const int MAXC = 200;
     registerValidation();
     inf.readInt(1, 100, "Radius of an orange");
     inf.readSpace();
@@ -64,11 +65,11 @@ int main(int argc, char* argv[]) {
     std::vector<Point> points;
     for(size_t i = 0; i < n; ++i) {
         Point point;
-        point.x = inf.readInt(-100, 100, "x coordinate");
+        point.x = inf.readInt(-MAXC, MAXC, "x coordinate");
         inf.readSpace();
-        point.y = inf.readInt(-100, 100, "y coordinate");
+        point.y = inf.readInt(-MAXC, MAXC, "y coordinate");
         inf.readSpace();
-        point.z = inf.readInt(-100, 100, "z coordinate");
+        point.z = inf.readInt(-MAXC, MAXC, "z coordinate");
         points.push_back(point);
         inf.readEoln();
     }

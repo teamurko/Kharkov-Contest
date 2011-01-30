@@ -1,5 +1,5 @@
 echo off
-for /l %%i in (52,1,52) do (
+for /l %%i in (1,1,50) do (
     echo ---------------------------- test %%i -----------------------------------
     echo generating...
     gen %%i > input.txt

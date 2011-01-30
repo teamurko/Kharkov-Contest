@@ -86,12 +86,13 @@ void test2()
 
 void test3()
 {
-    cout << 5 << endl;
-    cout << "0 0 0" << endl;
-    cout << "10 0 0" << endl;
-    cout << "0 10 0" << endl;
-    cout << "10 10 10" << endl;
-    cout << "5 5 1" << endl;
+    Points points;
+    points.push_back(Point(0, 0, 0));
+    points.push_back(Point(10, 0, 0));
+    points.push_back(Point(0, 10, 0));
+    points.push_back(Point(10, 10, 10));
+    points.push_back(Point(5, 5, 1));
+    print(points);
     exit(0);
 }
 
@@ -293,8 +294,8 @@ int main(int argc, char** argv)
     if (test == 19) test19();
     if (test <= 40) random(8, 70, -30, 30);
     if (test <= 50) random(90, 100);
-    if (test == 51) maxtest();
-    if (test == 52) random(1000, 1000);
+//    if (test == 51) maxtest();
+//    if (test == 52) random(1000, 1000);
     //TODO gen max tests
     assert(false);
 

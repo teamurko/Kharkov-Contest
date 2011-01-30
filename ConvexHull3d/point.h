@@ -92,6 +92,7 @@ std::ostream& operator<<(std::ostream& out, const Point& point)
     out.setf(std::ios::fixed, std::ios::floatfield);  
     out.precision(10);
     out << point.x() << " " << point.y() << " " << point.z();
+    return out;
 }
 
 Point operator/(const Point& point, double divisor)

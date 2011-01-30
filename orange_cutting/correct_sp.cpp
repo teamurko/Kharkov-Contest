@@ -424,7 +424,7 @@ void checkSum(const vector<double>& numbers, double r)
 {
     double sum = - 4 * M_PI * r * r * r / 3.0;
     sum = accumulate(all(numbers), sum);
-    assert(fabs(sum) < 1e-5);
+    assert(fabs(sum) < 1e-4);
 }
 
 //all planes intersect in a line passing through O and linePoint

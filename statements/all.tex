@@ -1,7 +1,7 @@
 \documentclass[11pt,a4paper,oneside]{article}
 
 \usepackage[T2A]{fontenc}
-\usepackage[utf8]{inputenc}
+\usepackage[cp1251]{inputenc}
 \usepackage[english,russian]{babel}
 \usepackage{olymp}
 \usepackage{graphicx}
@@ -49,12 +49,18 @@
 \createsection{\Note}{Note}
 
 \contest
-{РЎР±РѕСЂС‹ РїСЂРѕРіСЂР°РјРјРёСЃС‚РѕРІ, РҐР°СЂСЊРєРѕРІ, 2011}%
-{РљРѕРЅС‚РµСЃС‚ РЎС‚Р°РЅРёСЃР»Р°РІР° РџР°РєР°}%
-{Р’РѕСЃРєСЂРµСЃРµРЅСЊРµ, Р¤РµРІСЂР°Р»СЊ 13, 2011}%
-\newcommand{\inputproblem}[1]{\input #1.tex}
+{Сборы программистов, Харьков, 2011}%
+{Контест Станислава Пака}%
+{Воскресенье, Февраль 13, 2011}%
+\newcommand{\inputproblem}[1]{\input ../problems/#1/statement/#1.tex}
 
-\inputproblem{orange_cutting}
-\inputproblem{convex_hull3}
+\inputproblem{convex_hull_n2}
+\inputproblem{convex_hull_nlogn}
+\inputproblem{lines}
+\inputproblem{phantom}
+\inputproblem{point_to_segment}
+\inputproblem{segment_to_segment}
+\inputproblem{sniper}
+\inputproblem{cones}
 
 \end{document}

@@ -19,7 +19,6 @@
 
 using namespace std;
 
-
 bool symmetric(ConvexFigure::AdjacencyList graph)
 {
     forv(i, graph) {
@@ -79,7 +78,7 @@ Id findClosest(const Polyhedron& polyhedron, Id id, const Point& point, const Po
             result = v;
         }
     }
-    assert(result != std::numeric_limits<size_t>::max());
+//    assert(result != std::numeric_limits<size_t>::max());
     return result;
 }
 
@@ -110,13 +109,13 @@ void buildTriangulation(const Points& points, const Polyhedron& phdOne, const Po
     //check on the same side from plane
     {
         Plane plane(phdTwo[startIdTwo], phdOne[startIdOne], phdOne[startIdOne] + Point(0, 0, -1));
-        assert(below(points, plane));
+//        assert(below(points, plane));
     }
 
     if (phdOne.indexOf(closestId) != std::numeric_limits<size_t>::max()) {
         boundaryOne->push_back(phdOne.indexOf(closestId));
     } else {
-        assert(phdTwo.indexOf(closestId) != std::numeric_limits<size_t>::max());
+//        assert(phdTwo.indexOf(closestId) != std::numeric_limits<size_t>::max());
         boundaryTwo->push_back(phdTwo.indexOf(closestId));
     }
 
@@ -128,7 +127,7 @@ void buildTriangulation(const Points& points, const Polyhedron& phdOne, const Po
         //check on the same side from plane
         {
             const Plane plane(prevPoint, phdTwo[boundaryTwo->back()], phdOne[boundaryOne->back()]);
-            assert(below(points, plane));
+//            assert(below(points, plane));
         }
         const Point ort(ortVector(prevPoint, phdTwo[boundaryTwo->back()], phdOne[boundaryOne->back()]));
         Id closestIdOne = findClosest(phdOne, boundaryOne->back(), phdTwo[boundaryTwo->back()], ort, false);
@@ -182,8 +181,8 @@ void merge(const Points& points,
         polyhedron->removeEdges(boundaryOne[i], boundaryOne[prevId], boundaryOne[nextId]);
     }
 
-    Graph::writeToFile("rgraph1.gv", phdOne.graph());
-    Graph::writeToFile("graph2.gv", phdTwo.graph());
+//    Graph::writeToFile("rgraph1.gv", phdOne.graph());
+//    Graph::writeToFile("graph2.gv", phdTwo.graph());
     Polyhedron other = phdTwo;
     forv(i, boundaryTwo) {
         size_t prevId = (i + boundaryTwo.size() - 1) % boundaryTwo.size();
@@ -191,14 +190,14 @@ void merge(const Points& points,
         other.removeEdges(boundaryTwo[i], boundaryTwo[prevId], boundaryTwo[nextId]);
     }
 
-    Graph::writeToFile("rgraph2.gv", phdTwo.graph());
+//    Graph::writeToFile("rgraph2.gv", phdTwo.graph());
     
     Ids mapIdOne = polyhedron->leaveReachedFrom(boundaryOne.back());
-    assert(symmetric(polyhedron->graph()));
-    Graph::writeToFile("dgraph1.gv", phdOne.graph());
+//    assert(symmetric(polyhedron->graph()));
+//    Graph::writeToFile("dgraph1.gv", phdOne.graph());
     Ids mapIdTwo = other.leaveReachedFrom(boundaryTwo.back());
-    Graph::writeToFile("dgraph2.gv", phdTwo.graph());
-    assert(symmetric(other.graph()));
+//    Graph::writeToFile("dgraph2.gv", phdTwo.graph());
+//    assert(symmetric(other.graph()));
     forv(i, edges) {
         edges[i].setFrom(mapIdOne[edges[i].from()]);
         edges[i].setTo(mapIdTwo[edges[i].to()]);
@@ -229,9 +228,9 @@ void convexHull(const Points& points, Polyhedron* polyhedron, Polygon* polygon)
         convexHull(pointsTwo, &phdTwo, &plgTwo);
         merge(points, phdOne, plgOne, phdTwo, plgTwo, polyhedron, polygon);
     }
-    Graph::writeToFile("graph_all.gv", polyhedron->graph());
-    assert(symmetric(polyhedron->graph()));
-    assert(convex(*polyhedron));
+//    Graph::writeToFile("graph_all.gv", polyhedron->graph());
+//    assert(symmetric(polyhedron->graph()));
+//    assert(convex(*polyhedron));
 }
 
 typedef std::vector<std::vector<bool> > Used;
@@ -240,7 +239,7 @@ typedef std::vector<std::map<Id, Id> > InverseEdges;
 void dfs(Id prev, Id v, const ConvexFigure::AdjacencyList& graph, 
     Used& used, const InverseEdges& ie, Ids& obs, Facets* facets)
 {
-    assert(prev < graph[v].size());
+//    assert(prev < graph[v].size());
     Id cur = (prev + 1) % graph[v].size();
     bool foundFacet = true;
     while (prev != cur) {
@@ -253,13 +252,13 @@ void dfs(Id prev, Id v, const ConvexFigure::AdjacencyList& graph,
         } 
         else if (foundFacet) {
             foundFacet = false;
-            assert(!obs.empty());
+//            assert(!obs.empty());
 //            print<Id>(cerr, obs);
             Ids::iterator iter = obs.end()-1;
-            assert(v == obs.back());
+//            assert(v == obs.back());
             while (*(--iter) != obs.back());
 //            cerr << "iter " << *iter << endl;
-            assert(*iter == obs.back());
+//            assert(*iter == obs.back());
             //Ids ids(iter, obs.end());
             //while (iter != obs.end()) ids.push_back(idMap[*(iter++)]);            
             //facets->push_back(Facet(ids));
@@ -281,12 +280,12 @@ void extractFacets(const Polyhedron& polyhedron, Facets* facets)
         }
     } 
 
-    assert(symmetric(graph));
+//    assert(symmetric(graph));
 
     forn(i, polyhedron.size()) {
         const Ids& adj = polyhedron.adjacentVertices(i);
         forv(j, adj) {
-            assert(inverseEdges[i].find(adj[j])->second < polyhedron.adjacentVertices(adj[j]).size());
+//            assert(inverseEdges[i].find(adj[j])->second < polyhedron.adjacentVertices(adj[j]).size());
         }
     }
 
@@ -294,8 +293,7 @@ void extractFacets(const Polyhedron& polyhedron, Facets* facets)
     forv(i, used) {
         used[i] = std::vector<bool>(polyhedron.adjacentVertices(i).size(), false);
     }
-    Ids observed;
-    observed.push_back(0);
+    Ids observed(1);
 
     Ids idMap(polyhedron.size());
     forv(i, idMap) {
@@ -328,7 +326,7 @@ void solve()
     Polygon polygon;
     convexHull(points, &polyhedron, &polygon);
 //    assert(convex(polyhedron));
-    Graph::writeToFile("graph_all.gv", polyhedron.graph());
+//    Graph::writeToFile("graph_all.gv", polyhedron.graph());
 
     Facets answer;
 

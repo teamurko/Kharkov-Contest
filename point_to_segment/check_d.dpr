@@ -14,8 +14,8 @@ var
 
 begin
     DecimalSeparator := '.';
-  a := ouf.ReadReal;
-  b := ans.ReadReal;
+    a := ouf.ReadReal;
+    b := ans.ReadReal;
 
     if (abs(a - b) < EPS) then
     begin
