@@ -108,7 +108,7 @@ void buildTriangulation(const Points& points, const Polyhedron& phdOne, const Po
 
     //check on the same side from plane
     {
-        Plane plane(phdTwo[startIdTwo], phdOne[startIdOne], phdOne[startIdOne] + Point(0, 0, -1));
+//        Plane plane(phdTwo[startIdTwo], phdOne[startIdOne], phdOne[startIdOne] + Point(0, 0, -1));
 //        assert(below(points, plane));
     }
 
@@ -126,7 +126,7 @@ void buildTriangulation(const Points& points, const Polyhedron& phdOne, const Po
         edges->push_back(Edge(boundaryOne->back(), boundaryTwo->back()));
         //check on the same side from plane
         {
-            const Plane plane(prevPoint, phdTwo[boundaryTwo->back()], phdOne[boundaryOne->back()]);
+//            const Plane plane(prevPoint, phdTwo[boundaryTwo->back()], phdOne[boundaryOne->back()]);
 //            assert(below(points, plane));
         }
         const Point ort(ortVector(prevPoint, phdTwo[boundaryTwo->back()], phdOne[boundaryOne->back()]));
@@ -173,7 +173,7 @@ void merge(const Points& points,
 
     //removing invisible edges
 
-    Graph::writeToFile("graph1.gv", phdOne.graph());
+//    Graph::writeToFile("graph1.gv", phdOne.graph());
     *polyhedron = phdOne;
     forv(i, boundaryOne) {
         size_t nextId = (i + boundaryOne.size() - 1) % boundaryOne.size();
@@ -341,7 +341,7 @@ void solve()
 
 int main() 
 {
-    freopen("input.txt", "rt", stdin);
+//    freopen("input.txt", "rt", stdin);
     solve();
     return 0;
 }

@@ -15,6 +15,7 @@ using namespace std;
 typedef size_t Id;
 typedef vector<Id> Ids;
 typedef vector<Ids> Graph;
+typedef long double ld;
 
 template<typename T>
 T sqr(T x) 
@@ -146,15 +147,15 @@ bool visible(const Cone& one, const Cone& two, const Cone& middle)
 
     // -B +- sqrt(B * B - 4 * A * C) = -B/2/A +- sqrt(B/A*B/A - 4 * C / A)
 
-    const double EPS = 1e-6;
-    double D = sqr(B/1.0/A) - 4 * C / static_cast<double>(A);
-//    double D = B * (double)B - 4 * A * (double)C;
+    const ld EPS = 1e-8;
+    ld D = sqr(B/1.0/A) - 4 * C / static_cast<ld>(A);
+//    ld D = B * (ld)B - 4 * A * (ld)C;
     // If (1) doesn't have roots, then return true iff A > 0 
     if (D < -EPS) {
         return A > 0;
     }    
-    D = sqrt(fabs(D));
-    double root1 = -B/2.0/A + D/2.0, root2 = -B/2.0/A - D/2.0;
+    D = sqrtl(fabsl(D));
+    ld root1 = -B/2.0/A + D/2.0, root2 = -B/2.0/A - D/2.0;
     // Let r1 and r2 are roots (1) (r1 <= r2).
     // Check if r1 or r2 in [a, b] or a or b satisfy (1)
     if (A * a.a * a.a + B * a.a * a.b + C * a.b * a.b <= 0) {   

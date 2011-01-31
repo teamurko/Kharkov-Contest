@@ -79,7 +79,7 @@ Id findClosest(const Polyhedron& polyhedron, Id id, const Point& point, const Po
             result = v;
         }
     }
-    assert(result != std::numeric_limits<size_t>::max());
+//    assert(result != std::numeric_limits<size_t>::max());
     return result;
 }
 
@@ -109,8 +109,8 @@ void buildTriangulation(const Points& points, const Polyhedron& phdOne, const Po
 
     //check on the same side from plane
     {
-        Plane plane(phdTwo[startIdTwo], phdOne[startIdOne], phdOne[startIdOne] + Point(0, 0, -1));
-        assert(below(points, plane));
+//        Plane plane(phdTwo[startIdTwo], phdOne[startIdOne], phdOne[startIdOne] + Point(0, 0, -1));
+//        assert(below(points, plane));
     }
 
     if (phdOne.indexOf(closestId) != std::numeric_limits<size_t>::max()) {
@@ -327,7 +327,7 @@ void solve()
     Polygon polygon;
     convexHull(points, &polyhedron, &polygon);
 //    assert(convex(polyhedron));
-    Graph::writeToFile("graph_all.gv", polyhedron.graph());
+//    Graph::writeToFile("graph_all.gv", polyhedron.graph());
 
     Facets answer;
 

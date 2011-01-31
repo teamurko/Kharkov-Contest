@@ -38,7 +38,7 @@ public:
 
 Id findTangent(const Points& points, const Compare& comp)
 {
-    assert(points.size() >= 3);
+//    assert(points.size() >= 3);
     size_t cur = 0, next = cur + 1;
     while (comp(points[cur], points[next])) {
         next = cur;
@@ -84,10 +84,10 @@ namespace g2d
 
 void convexHull2(Points points, Polygon* polygon)
 {
-    assert(points.size() > 3);
+//    assert(points.size() > 3);
     sort(points.begin(), points.end(), g2d::PointLess);
     points.erase(unique(points.begin(), points.end(), g2d::PointEq), points.end());
-    assert(points.size() > 2);
+//    assert(points.size() > 2);
     Points::iterator originIterator = 
         min_element(points.begin(), points.end());
     Point origin = *originIterator;

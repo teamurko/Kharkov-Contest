@@ -28,7 +28,7 @@ public:
     void addEdges(Id source, const Ids& adding)
     {
         Ids& adj = graph_[source];
-        assert(adding[0] >= size());
+//        assert(adding[0] >= size());
         Ids::iterator iter = adj.begin();
         while (iter != adj.end() && *iter + size() != adding[0]) ++iter;
         if (iter != adj.end()) {
@@ -38,7 +38,7 @@ public:
         Ids::const_iterator addIter = adding.begin();
         iter = adj.begin();
         while (addIter != adding.end() && iter != adj.end()) {
-            assert(*addIter >= size());
+//            assert(*addIter >= size());
             while (iter != adj.end() && *iter + size() != *addIter) {
                 merged.push_back(*iter);
                 ++iter;
@@ -183,9 +183,11 @@ public:
             forv(i, edges) {
                 used.insert(edges[i].from());
             }
+/*
             forv(i, edges) {
                 assert(!used.count(edges[i].to()));
             }
+*/
         }
         size_t curSize = size();
         forn(i, polyhedron.size()) {

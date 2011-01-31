@@ -111,10 +111,10 @@ void test3()
     printExit(cones);
 }
 
-void testRandom(int numCones)
+void testRandom(int minr, int maxr, int minh, int maxh, int numCones)
 {
     Cones cones;
-    genRandomCones(1, 100, 1, 100, numCones, &cones);
+    genRandomCones(minr, maxr, minh, maxh, numCones, &cones);
     printExit(cones);   
 }
 
@@ -172,10 +172,19 @@ void testAlmostTouching()
     cones.pb(Cone(Point(500, 1), 100, 100));
 }
 
+void testParabola()
+{
+    Cones cones;
+    for(int x = -9; x <= 9; ++x) {
+        cones.push_back(Cone(Point(x * 5, 0), 2, 100 - x * x));
+    }
+    printExit(cones);
+}
+
 int main(int argc, char** argv) 
 {
     registerGen(argc, argv);
-    if (argc != 2) {
+    if (argc != 2) {                                              
         cerr << "Incorrect number of arguments" << endl;
         exit(1);
     }
@@ -192,10 +201,12 @@ int main(int argc, char** argv)
     if (test == 7) testTouching1();
     if (test == 8) testTouching2();
     if (test == 9) testAlmostTouching();
+    
+    if (test == 10) testParabola();
 
-    if (test <= 30) testRandom(100);
-    if (test <= 40) testRandom(300);
-    if (test <= 100) testRandom(3);
+    if (test <= 30) testRandom(1, 100, 1, 100, 100);
+    if (test <= 40) testRandom(1, 100, 1, 100, 300);
+    if (test <= 50) testRandom(1, 3, 99, 100, 300);
     assert(false);
     return 0;
 }
