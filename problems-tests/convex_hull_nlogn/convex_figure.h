@@ -6,6 +6,7 @@
 #include <vector>
 #include <set>
 #include <iterator>
+#include <limits>
 #include <algorithm>
 
 class ConvexFigure 

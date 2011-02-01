@@ -2,8 +2,10 @@
 #include "plane.h"
 #include "facet.h"
 
+#include <windows.h>
 #include <iostream>
 #include <cmath>
+#include <ctime>
 #include <vector>
 #include <set>
 #include <limits>
@@ -200,7 +202,9 @@ void test()
 
 int main() 
 {
+    clock_t start = clock();    
     int nt; cin >> nt;
     forn(i, nt) solve();
+    cerr << clock() - start << endl;
     return 0;
 }

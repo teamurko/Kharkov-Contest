@@ -9,12 +9,15 @@
 #include "convex_figure.h"
 #include "convex_hull_simple.h"
 
+#include <ctime>
 #include <iostream>
 #include <cmath>
 #include <iterator>
 #include <set>
 #include <stack>
 #include <cstdlib>
+#include <cassert>
+#include <numeric>
 #include <deque>
 
 using namespace std;
@@ -342,10 +345,12 @@ void solve()
 
 int main() 
 {
+    clock_t start = clock();
     int numTests; 
     cin >> numTests;
     forn(i, numTests) {
         solve();
     }
+    cerr << clock() - start << endl;
     return 0;
 }
