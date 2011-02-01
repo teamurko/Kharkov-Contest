@@ -1,23 +1,18 @@
 echo off
+g++ -o gen gen.cpp
+g++ -o correct simple.cpp
+g++ -o validator validator.cpp
 for /l %%i in (1,1,50) do (
     echo ---------------------------- test %%i -----------------------------------
     echo generating...
-    gen %%i > input.txt
+    gen %%i > tests/%%i
     echo done
     echo validating...
-    validator < input.txt
+    validator < tests/%%i
     echo done
     echo running simple...
-    simple < input.txt > simple.out
+    correct < tests/%%i > tests/%%i.a
     echo done
-    echo running n2...
-    n2 < input.txt > n2.out
-    echo done
-    echo running nlogn...
-    nlogn.exe < input.txt > nlogn.out
-    echo done
-    fc simple.out n2.out
-    fc simple.out nlogn.out
     echo ----------------------------- end %%i -----------------------------------
 )
    

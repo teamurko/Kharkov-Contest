@@ -200,10 +200,7 @@ void test()
 
 int main() 
 {
-    int numTests;
-    cin >> numTests;
-    forn(i, numTests) {
-        solve();
-    }
+    int nt; cin >> nt;
+    forn(i, nt) solve();
     return 0;
 }
