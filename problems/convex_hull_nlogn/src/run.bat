@@ -1,6 +1,6 @@
 echo off
 g++ -o gen gen.cpp
-g++ -o correct nlogn.cpp
+g++ -o correct nlogn_correct.cpp
 g++ -o validator validator.cpp
 set /A numTests=50
 :: 102 tests constant hard coded, 102 = numTests * 2 + 2

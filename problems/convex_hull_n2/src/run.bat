@@ -1,6 +1,6 @@
 echo off
 g++ -o gen gen.cpp
-g++ -o correct n2.cpp
+g++ -o correct n2_correct.cpp
 g++ -o validator validator.cpp
 set /A numTests=50
 echo %numTests% > tests/all
