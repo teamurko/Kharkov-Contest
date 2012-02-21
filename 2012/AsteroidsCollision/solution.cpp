@@ -230,22 +230,57 @@ bool checkNoConsequentColinear(const Points& points)
     return true;
 }
 
-double solve(const Points& points)
+template <typename T>
+T det(T a, T b, T c, T d)
 {
-    const int MAX_NUM_POINTS_NAIVE = 4;
-    if (points.size() <= MAX_NUM_POINTS_NAIVE) {
-        return naiveMinAreaEnclosingBBox(points);
-    }
-    else {
-        require(checkNoConsequentColinear(points),
-                "There are three consequent colinear points");
-        return minAreaEnclosingBBox(points);
-    }
+    return a * d - b * c;
 }
 
-double intersect(const Vector& v, const Point& a, const Point& b)
+template <typename T>
+T gcd(T a, T b)
 {
-    //TODO
+    if (a == 0) return b;
+    return gcd(b % a, a);
+}
+
+template <typename T>
+struct FracT
+{
+    FracT(T xx, T yy) : x(xx), y(yy) { normalize(); }
+    FracT() : x(T()), y(T()) { normalize(); }
+    void normalize()
+    {
+        if (y < 0) {
+            y = -y;
+            x = -x;
+        }
+        T d = gcd(y, abs(x));
+        y /= d;
+        x /= d;
+    }
+    T x, y;
+};
+
+typedef FracT<ll> Frac;
+
+Frac intersect(const Vector& v, const Point& a, const Point& b)
+{
+    ll d = det(v.x, a.x-b.x, v.y, a.y-b.y);
+    if (d == 0) return Frac(1, 0);
+    Frac t1(det(a.x, a.x-b.x, a.y, a.y-b.y), d);
+    Frac t2(det(v.x, a.x, v.y, a.y), d);
+    if (t1.x < 0 || t2.x < 0 || t2.x > t2.y) return Frac(1, 0);
+    return t1;
+}
+
+Frac min(const Frac& a, const Frac& b)
+{
+    if (a.x * b.y < b.x * a.y) {
+        return a;
+    }
+    else {
+        return b;
+    }
 }
 
 void printUsage(const char* binary)
@@ -271,8 +306,8 @@ int main(int argc, char** argv)
     cout.precision(10);
     cout << fixed;
 
-    Points sum = minkovskySum(one, two);
-    require(sum == naiveMinkovskySum(one, two),
+    Points sum = minkovskySum(ao, at);
+    require(sum == naiveMinkovskySum(ao, at),
             "Polygons sum methods give different results");
 
     Vector v(one.x - two.x, one.y - two.y);
@@ -288,14 +323,14 @@ int main(int argc, char** argv)
         }
     }
     if (nonneg == 0 || nonpos == 0) {
-        cout << -1 << endl;
+        cout << "No collision" << endl;
     }
     else {
-        double ans = 1e12;
+        Frac ans(1, 0);
         forv(i, sum) {
             ans = min(ans, intersect(v, sum[i], sum[(i + 1) % sum.size()]));
         }
-        cout << ans << endl;
+        cout << ans.x << "/" << ans.y << endl;
     }
     return 0;
 }
