@@ -229,6 +229,106 @@ void test3()
     exit(0);
 }
 
+
+void specTest4()
+{
+    cout << 3 << endl;
+    cout << "10 10\n";
+    cout << "20 20\n";
+    cout << "10 20\n";
+    cout << "20 0\n";
+    cout << 3 << endl;
+    cout << "100 10\n";
+    cout << "110 10\n";
+    cout << "110 20\n";
+    cout << "10 0\n";
+    exit(0);
+}
+
+void specTest5()
+{
+    cout << 3 << endl;
+    cout << "10 10\n";
+    cout << "20 20\n";
+    cout << "10 20\n";
+    cout << "20 0\n";
+    cout << 3 << endl;
+    cout << "100 10\n";
+    cout << "110 10\n";
+    cout << "110 20\n";
+    cout << "-10000 0\n";
+    exit(0);
+}
+
+void specTest6()
+{
+    cout << 3 << endl;
+    cout << "10 10\n";
+    cout << "20 20\n";
+    cout << "10 20\n";
+    cout << "20 0\n";
+    cout << 3 << endl;
+    cout << "100 10\n";
+    cout << "110 10\n";
+    cout << "110 20\n";
+    cout << "20 0\n";
+    exit(0);
+}
+
+void specTest7()
+{
+    cout << 3 << endl;
+    cout << "0 0\n";
+    cout << "1 0\n";
+    cout << "0 1\n";
+    cout << "0 10000\n";
+    cout << 3 << endl;
+    cout << "2 11\n";
+    cout << "1 10\n";
+    cout << "2 10\n";
+    cout << "0 -10000\n";
+    exit(0);
+}
+
+void specTest8()
+{
+    cout << 3 << endl;
+    cout << "-1 0\n";
+    cout << "0 0\n";
+    cout << "-1 1\n";
+    cout << "0 0\n";
+    cout << 3 << endl;
+    cout << "-1 5000\n";
+    cout << "0 5000\n";
+    cout << "0 10000\n";
+    cout << "2 -9999\n";
+    exit(0);
+}
+
+void specTest9()
+{
+    cout << 3 << endl;
+    cout << "-1 0\n";
+    cout << "0 0\n";
+    cout << "-1 1\n";
+    cout << "0 0\n";
+    cout << 3 << endl;
+    cout << "-1 5000\n";
+    cout << "0 5000\n";
+    cout << "0 10000\n";
+    cout << "2 -10000\n";
+    exit(0);
+}
+
+void maxTest20()
+{
+}
+
+void maxTest21()
+{
+
+}
+
 int main(int argc, char* argv[])
 {
     registerGen(argc, argv);
@@ -242,6 +342,14 @@ int main(int argc, char* argv[])
         case 1: test1();
         case 2: test2();
         case 3: test3();
+        case 4: specTest4();
+        case 5: specTest5();
+        case 6: specTest6();
+        case 7: specTest7();
+        case 8: specTest8();
+        case 9: specTest9();
+        case 20: maxTest20();
+        case 21: maxTest21();
     }
 
     int psize = atoi(argv[2]);
