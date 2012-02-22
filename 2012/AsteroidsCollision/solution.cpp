@@ -57,17 +57,6 @@ bool operator==(const Point& a, const Point& b)
     return a.x == b.x && a.y == b.y;
 }
 
-void readAsteroid(Points& points, Vector& vector)
-{
-    int n;
-    cin >> n;
-    points.resize(n);
-    forn(i, n) {
-        cin >> points[i].x >> points[i].y;
-    }
-    cin >> vector.x >> vector.y;
-}
-
 bool lexComp(const Point& a, const Point& b)
 {
     return a.x < b.x || a.x == b.x && a.y < b.y;
@@ -143,54 +132,9 @@ double dist(const Point& a, const Point& b)
     return hypot(a.x - b.x, a.y - b.y);
 }
 
-double dist2(const Point& a, const Point& b)
+ll dist2(const Point& a, const Point& b)
 {
     return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
-}
-
-Points naiveMinkovskySum(const Points& polyOne, const Points& polyTwo)
-{
-    Points points;
-    points.reserve(polyOne.size() * polyTwo.size());
-    forv(i, polyOne) {
-        forv(j, polyTwo) {
-            points.pb(polyOne[i]);
-            points.back().x += polyTwo[j].x;
-            points.back().y += polyTwo[j].y;
-        }
-    }
-    return convexHull(points);
-}
-
-Points minkovskySum(const Points& polyOne, const Points& polyTwo)
-{
-    require(!polyOne.empty() && !polyTwo.empty(),
-            "Polygons should not be empty.");
-    Points sum;
-    sum.pb(*polyOne.begin());
-    sum.back().x += polyTwo.begin()->x;
-    sum.back().y += polyTwo.begin()->y;
-    int oni = 0, twi = 0;
-    int n = polyOne.size();
-    int m = polyTwo.size();
-    while (true) {
-        Vector one(polyOne[oni], polyOne[(oni + 1) % n]);
-        Vector two(polyTwo[twi], polyTwo[(twi + 1) % m]);
-        ll vp = vectProd(one, two);
-        if (vp >= 0) {
-            oni = (oni + 1) % n;
-        }
-        if (vp <= 0) {
-            twi = (twi + 1) % m;
-        }
-        Point np(polyOne[oni].x + polyTwo[twi].x,
-                 polyOne[oni].y + polyTwo[twi].y);
-        if (np == *sum.begin()) {
-            break;
-        }
-        sum.pb(np);
-    }
-    return sum;
 }
 
 Points removeConsequentColinear(Points points)
@@ -243,6 +187,69 @@ T gcd(T a, T b)
     return gcd(b % a, a);
 }
 
+Points naiveMinkovskySum(const Points& polyOne, const Points& polyTwo)
+{
+    Points points;
+    points.reserve(polyOne.size() * polyTwo.size());
+    forv(i, polyOne) {
+        forv(j, polyTwo) {
+            points.pb(polyOne[i]);
+            points.back().x += polyTwo[j].x;
+            points.back().y += polyTwo[j].y;
+        }
+    }
+    return convexHull(points);
+}
+
+void normalize(Points& points)
+{
+    int id = 0;
+    forv(i, points) {
+        if (lexComp(points[i], points[id])) id = i;
+    }
+    rotate(points.begin(), points.begin() + id, points.end());
+}
+
+void print(const Points& ps)
+{
+    forv(i, ps) {
+        cerr << ps[i].x << " " << ps[i].y << endl;
+    }
+}
+
+Points minkovskySum(Points polyOne, Points polyTwo)
+{
+    require(!polyOne.empty() && !polyTwo.empty(),
+            "Polygons should not be empty.");
+    normalize(polyOne);
+    normalize(polyTwo);
+    Points sum;
+    sum.pb(*polyOne.begin());
+    sum.back().x += polyTwo.begin()->x;
+    sum.back().y += polyTwo.begin()->y;
+    int oni = 0, twi = 0;
+    int n = polyOne.size();
+    int m = polyTwo.size();
+    while (true) {
+        Vector one(polyOne[oni], polyOne[(oni + 1) % n]);
+        Vector two(polyTwo[twi], polyTwo[(twi + 1) % m]);
+        ll vp = vectProd(one, two);
+        if (vp >= 0) {
+            oni = (oni + 1) % n;
+        }
+        if (vp <= 0) {
+            twi = (twi + 1) % m;
+        }
+        Point np(polyOne[oni].x + polyTwo[twi].x,
+                 polyOne[oni].y + polyTwo[twi].y);
+        if (np == *sum.begin()) {
+            break;
+        }
+        sum.pb(np);
+    }
+    return sum;
+}
+
 template <typename T>
 struct FracT
 {
@@ -283,6 +290,17 @@ Frac min(const Frac& a, const Frac& b)
     }
 }
 
+void readAsteroid(Points& points, Vector& vector)
+{
+    int n;
+    cin >> n;
+    points.resize(n);
+    forn(i, n) {
+        cin >> points[i].x >> points[i].y;
+    }
+    cin >> vector.x >> vector.y;
+}
+
 void printUsage(const char* binary)
 {
     cerr << binary << " " << "sol | naive | check" << endl;
@@ -310,7 +328,8 @@ int main(int argc, char** argv)
     require(sum == naiveMinkovskySum(ao, at),
             "Polygons sum methods give different results");
 
-    Vector v(one.x - two.x, one.y - two.y);
+    Vector v(two.x - one.x, two.y - one.y);
+    /*
     size_t nonneg = 0, nonpos = 0;
     Point origin;
     forv(i, sum) {
@@ -325,12 +344,16 @@ int main(int argc, char** argv)
     if (nonneg == 0 || nonpos == 0) {
         cout << "No collision" << endl;
     }
-    else {
-        Frac ans(1, 0);
-        forv(i, sum) {
-            ans = min(ans, intersect(v, sum[i], sum[(i + 1) % sum.size()]));
-        }
-        cout << ans.x << "/" << ans.y << endl;
+    */
+    Frac ans(1, 0);
+    forv(i, sum) {
+        ans = min(ans, intersect(v, sum[i], sum[(i + 1) % sum.size()]));
     }
+    if (ans.y > 0) {
+        cout << ans.x << "/" << ans.y << endl;
+    } else {
+        cout << "No collision" << endl;
+    }
+
     return 0;
 }
