@@ -107,13 +107,13 @@ void readAsteroid(Points& points, Vector& vector)
 
 void printUsage(const char* binary)
 {
-    cerr << binary << " " << "sol | naive | check" << endl;
+    cerr << binary << " " << "sol | check" << endl;
 }
 
 int main(int argc, char** argv)
 {
     ios_base::sync_with_stdio(false);
-    if (argc != 1) {
+    if (argc != 2) {
         printUsage(argv[0]);
         return 1;
     }
@@ -128,9 +128,17 @@ int main(int argc, char** argv)
     cout.precision(10);
     cout << fixed;
 
+    string action(argv[1]);
+
     Points sum = minkovskySum(ao, at);
-    REQUIRE(sum == naiveMinkovskySum(ao, at),
+    if (action == "check") {
+        REQUIRE(sum == naiveMinkovskySum(ao, at),
             "Polygons sum methods give different results");
+    }
+    else {
+        REQUIRE(action == "sol", "unknown action: sol | check should be "
+                                 << "but " << action << " given");
+    }
 
     Vector v(two.x - one.x, two.y - one.y);
     /*

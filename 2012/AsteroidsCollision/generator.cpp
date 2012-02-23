@@ -155,7 +155,8 @@ void maxTest20_25()
 {
     Points pas(1, Point(1, 0));
     Vector v(1, 1);
-    while (pas.back().y + v.y <= 10000) {
+    const int maxv = 100 * 1000000;
+    while (pas.back().y + v.y <= maxv) {
         pas.pb(pas.back());
         pas.back().x += v.x;
         pas.back().y += v.y;
@@ -176,16 +177,10 @@ void maxTest20_25()
         sym[i].y *= -1;
     }
     print(pas);
-    const static int maxv = 10000;
     cout << rnd.next(-maxv, maxv) << " " << rnd.next(-maxv, maxv) << endl;
     print(sym);
     cout << rnd.next(-maxv, maxv) << " " << rnd.next(-maxv, maxv) << endl;
     exit(0);
-}
-
-void maxTest21()
-{
-
 }
 
 int main(int argc, char* argv[])
