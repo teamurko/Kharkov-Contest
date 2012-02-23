@@ -172,4 +172,33 @@ T det(T a, T b, T c, T d)
     return a * d - b * c;
 }
 
+template <typename T>
+T gcd(T a, T b)
+{
+    if (a == 0) return b;
+    return gcd(b % a, a);
+}
+
+template <typename T>
+struct FracT
+{
+    FracT(T xx, T yy) : x(xx), y(yy) { normalize(); }
+    FracT() : x(T()), y(T(1)) { normalize(); }
+    void normalize()
+    {
+        if (y < 0) {
+            y = -y;
+            x = -x;
+        }
+        T ux = x;
+        if (ux < 0) ux = -ux;
+        T d = gcd(y, ux);
+        y /= d;
+        x /= d;
+    }
+    T x, y;
+};
+
+typedef FracT<ll> Frac;
+
 #endif // COMMON_GEOMETRY_H
