@@ -1,14 +1,11 @@
-#include <cassert>
+#ifndef COMMON_GEOMETRY_H
+#define COMMON_GEOMETRY_H
+
+#include <algorithm>
 #include <vector>
 #include <string>
-#include <map>
-#include <set>
-#include <cmath>
-#include <sstream>
-#include <algorithm>
-#include <queue>
 #include <iostream>
-using namespace std;
+#include <cmath>
 
 #define forn(i, n) for(int i = 0; i < int(n); ++i)
 #define for1(i, n) for(int i = 1; i <= int(n); ++i)
@@ -17,18 +14,13 @@ using namespace std;
 #define all(v) v.begin(), v.end()
 #define mp make_pair
 
-typedef pair<int, int> pii;
-typedef vector<int> vi;
+#define REQUIRE(cond, message) \
+    if (!(cond)) { std::cerr << message << std::endl; }
+
+typedef std::pair<int, int> pii;
+typedef std::vector<int> vi;
 typedef long long ll;
 typedef long double ld;
-
-void require(bool cond, const string& message = "Runtime error")
-{
-    if (!cond) {
-        cerr << message << endl;
-        assert(false);
-    }
-}
 
 template <typename T>
 struct PointT
@@ -38,22 +30,34 @@ struct PointT
     T x, y;
 };
 
-typedef PointT<ll> Point;
-typedef vector<Point> Points;
-
-void readData(Points& points)
+template <typename T>
+struct VectorT
 {
-    int n;
-    cin >> n;
-    points.resize(n);
-    forn(i, n) {
-        cin >> points[i].x >> points[i].y;
-    }
+    VectorT() : x(T()), y(T()) { }
+    VectorT(T xx, T yy) : x(xx), y(yy) { }
+    VectorT(const PointT<T>& start, const PointT<T>& end) :
+        x(end.x - start.x), y(end.y - start.y) { }
+    T x, y;
+};
+
+typedef PointT<ll> Point;
+typedef VectorT<ll> Vector;
+typedef std::vector<Point> Points;
+
+bool operator==(const Point& a, const Point& b)
+{
+    return a.x == b.x && a.y == b.y;
 }
 
 bool lexComp(const Point& a, const Point& b)
 {
     return a.x < b.x || a.x == b.x && a.y < b.y;
+}
+
+template <typename T>
+T vectProd(const VectorT<T>& a, const VectorT<T>& b)
+{
+    return a.x * b.y - a.y * b.x;
 }
 
 template <typename T>
@@ -73,6 +77,7 @@ bool isCounterClockWise(const Point& a, const Point& b, const Point& c)
 }
 
 Points removeConsequentColinear(Points points);
+bool checkNoConsequentColinear(const Points& points);
 
 Points convexHull(Points points)
 {
@@ -105,10 +110,13 @@ Points convexHull(Points points)
     Points result;
     forv(i, down) result.pb(down[i]);
     reverse(all(up));
-    require(!up.empty(), "Up vector is empty");
+    REQUIRE(!up.empty(), "Up vector is empty");
     up.pop_back();
     forv(i, up) result.pb(up[i]);
-    return removeConsequentColinear(result);
+    result = removeConsequentColinear(result);
+    REQUIRE(checkNoConsequentColinear(result),
+        "No three consequent colinear points are allowed in a convex hull.");
+    return result;
 }
 
 double dist(const Point& a, const Point& b)
@@ -118,18 +126,7 @@ double dist(const Point& a, const Point& b)
 
 ll dist2(const Point& a, const Point& b)
 {
-    return (a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y);
-}
-
-ll naiveMostDistant(const Points& points)
-{
-    ll result = 0;
-    forv(j, points) {
-        forn(i, j) {
-            result = max(result, dist2(points[i], points[j]));
-        }
-    }
-    return result;
+    return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
 }
 
 Points removeConsequentColinear(Points points)
@@ -169,76 +166,10 @@ bool checkNoConsequentColinear(const Points& points)
     return true;
 }
 
-ll mostDistant(const Points& points)
+template <typename T>
+T det(T a, T b, T c, T d)
 {
-    int n = points.size();
-    int lap = 0, rap = 1;
-    ll result = 0;
-    forn(index, n) {
-        int prevIndex = (index + n - 1) % n;
-        const Point& prev = points[prevIndex];
-        const Point& cur = points[index];
-        const Point& next = points[(index + 1) % n];
-        while (vectProd(prev, cur, points[(lap + 1) % n]) >
-               vectProd(prev, cur, points[lap])) lap = (lap + 1) % n;
-        while (vectProd(cur, next, points[(rap + 1) % n]) >=
-               vectProd(cur, next, points[rap])) rap = (rap + 1) % n;
-        for (int i = lap; i != rap; i = (i + 1) % n) {
-            result = max(result, dist2(cur, points[i]));
-        }
-        result = max(result, dist2(cur, points[rap]));
-    }
-    return result;
+    return a * d - b * c;
 }
 
-ll solve(const Points& points)
-{
-    cerr << "ch size : " << points.size() << endl;
-    const int MAX_NUM_POINTS_NAIVE = 4;
-    if (points.size() <= MAX_NUM_POINTS_NAIVE) {
-        return naiveMostDistant(points);
-    }
-    else {
-        require(checkNoConsequentColinear(points),
-                "There are three consequent colinear points");
-        return mostDistant(points);
-    }
-}
-
-ll solveNaive(const Points& points)
-{
-    return naiveMostDistant(points);
-}
-
-void printUsage(const char* binary)
-{
-    cerr << binary << " " << "sol | naive | check" << endl;
-}
-
-int main(int argc, char** argv)
-{
-    ios_base::sync_with_stdio(false);
-    if (argc != 2) {
-        printUsage(argv[0]);
-        return 1;
-    }
-    string var = argv[1];
-    Points points;
-    readData(points);
-    if (var == "naive") {
-        cout << solveNaive(points) << endl;
-    }
-    else {
-        ll ans = solve(convexHull(points));
-        if (var == "check") {
-            ll naive = solveNaive(points);
-            ostringstream os;
-            os << "Naive and correct solutions differ"
-               << "  ans : " << ans << " naive : " << naive << endl;
-            require(ans == naive, os.str());
-        }
-        cout << ans << endl;
-    }
-
-    return 0;
-}
+#endif // COMMON_GEOMETRY_H
