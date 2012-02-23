@@ -1,3 +1,4 @@
+#include "../common/geometry.h"
 #include <cassert>
 #include <vector>
 #include <string>
@@ -10,37 +11,6 @@
 #include <iostream>
 using namespace std;
 
-#define forn(i, n) for(int i = 0; i < int(n); ++i)
-#define for1(i, n) for(int i = 1; i <= int(n); ++i)
-#define forv(i, v) forn(i, v.size())
-#define pb push_back
-#define all(v) v.begin(), v.end()
-#define mp make_pair
-
-typedef pair<int, int> pii;
-typedef vector<int> vi;
-typedef long long ll;
-typedef long double ld;
-
-void require(bool cond, const string& message = "Runtime error")
-{
-    if (!cond) {
-        cerr << message << endl;
-        assert(false);
-    }
-}
-
-template <typename T>
-struct PointT
-{
-    PointT() : x(T()), y(T()) { }
-    PointT(T xx, T yy) : x(xx), y(yy) { }
-    T x, y;
-};
-
-typedef PointT<ll> Point;
-typedef vector<Point> Points;
-
 void readData(Points& points)
 {
     int n;
@@ -51,81 +21,86 @@ void readData(Points& points)
     }
 }
 
-bool lexComp(const Point& a, const Point& b)
+vi toVec(ll n)
 {
-    return a.x < b.x || a.x == b.x && a.y < b.y;
+    vi r;
+    while (n > 0) {
+        r.pb(n % 10);
+        n /= 10;
+    }
+    if (r.empty()) r.pb(0);
+    return r;
+}
+
+vi mul(const vi& a, const vi& b)
+{
+    vi c(a.size() + b.size());
+    forv(i, c) {
+        forn(j, i + 1) {
+            if (j < a.size() && i - j < b.size()) {
+                c[i] += a[j] * b[i - j];
+            }
+        }
+        if (c[i] > 10) {
+            c[i + 1] += c[i] / 10;
+            c[i] %= 10;
+        }
+    }
+    while (c.size() > 1 && c.back() == 0) c.pop_back();
+    return c;
+}
+
+vi mul(ll na, ll nb)
+{
+    REQUIRE(na >= 0 && nb >= 0, "Cannot multiply negative numbers!");
+    vi a = toVec(na);
+    vi b = toVec(nb);
+    return mul(a, b);
+}
+
+int cmp(const vi& a, const vi& b)
+{
+    REQUIRE(!a.empty() && !b.empty(), "Empty big integers!");
+    if (a.size() > b.size()) {
+        return 1;
+    } else if (a.size() < b.size()) {
+        return -1;
+    } else {
+        for (int i = a.size() - 1; i >= 0; --i) {
+            if (a[i] > b[i]) return 1;
+            else if (a[i] < b[i]) return -1;
+        }
+    }
+    return 0;
+}
+
+void cancel(ll& a, ll& b)
+{
+    ll d = gcd(a, b);
+    a /= d;
+    b /= d;
 }
 
 template <typename T>
-T vectProd(const PointT<T>& a, const PointT<T>& b, const PointT<T>& c)
+T update(const T& res, ll a, ll b, ll c)
 {
-    return a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y);
-}
-
-bool isClockWise(const Point& a, const Point& b, const Point& c)
-{
-    return vectProd(a, b, c) < 0;
-}
-
-bool isCounterClockWise(const Point& a, const Point& b, const Point& c)
-{
-    return vectProd(a, b, c) > 0;
-}
-
-Points removeConsequentColinear(Points points);
-
-Points convexHull(Points points)
-{
-    if (points.size() == 1) return points;
-    sort(all(points), &lexComp);
-    Point p1 = *points.begin(),  p2 = points.back();
-    Points up, down;
-    up.push_back(p1);
-    down.push_back(p1);
-
-    for1(i, points.size() - 1) {
-        const Point& pt = points[i];
-        if (i + 1 == points.size() || isClockWise(p1, pt, p2)) {
-            while (up.size() >= 2 &&
-                   !isClockWise(up[up.size()-2], up.back(), pt)) {
-                up.pop_back();
-            }
-            up.pb(pt);
-        }
-        if (i + 1 == points.size() || isCounterClockWise(p1, pt, p2)) {
-            while (down.size() >= 2 &&
-                   !isCounterClockWise(
-                            down[down.size()-2], down.back(), pt)) {
-                down.pop_back();
-            }
-            down.pb(pt);
-        }
+    REQUIRE(a >= 0 && b >= 0, "Negative width or heigth");
+    REQUIRE(c > 0, "Distance should be positive");
+    cancel(a, c);
+    cancel(b, c);
+    vi pre = mul(a, b);
+    if (cmp(mul(res.first, toVec(c)),
+            mul(toVec(res.second), pre)) == 1) {
+        return mp(pre, c);
     }
-
-    Points result;
-    forv(i, down) result.pb(down[i]);
-    reverse(all(up));
-    require(!up.empty(), "Up vector is empty");
-    up.pop_back();
-    forv(i, up) result.pb(up[i]);
-    return removeConsequentColinear(result);
+    return res;
 }
 
-double dist(const Point& a, const Point& b)
+pair<vi, ll> naiveMinAreaEnclosingBBox(const Points& points)
 {
-    return hypot(a.x - b.x, a.y - b.y);
-}
-
-double dist2(const Point& a, const Point& b)
-{
-    return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
-}
-
-double naiveMinAreaEnclosingBBox(const Points& points)
-{
-    if (points.size() <= 2) return 0.0;
+    if (points.size() <= 2) return mp(vi(1, 1), 0);
     int n = points.size();
-    double result = 1e12;
+    pair<vi, ll> res = mp(vi(1, 1), 0);
     forv(i, points) {
         const Point& cur = points[i];
         const Point& next = points[(i+1) % n];
@@ -147,57 +122,20 @@ double naiveMinAreaEnclosingBBox(const Points& points)
                 dapl = j;
             }
         }
-        double h = vectProd(cur, next, points[ap]);
-        double w = vectProd(cur, ort, points[dapr]) -
+        ll h = vectProd(cur, next, points[ap]);
+        ll w = vectProd(cur, ort, points[dapr]) -
                    vectProd(cur, ort, points[dapl]);
-        require(w >= 0, "Negative width");
-        result = min(result, h / dist2(cur, next) * w);
-    }
-    return result;
-}
-
-Points removeConsequentColinear(Points points)
-{
-    if (points.empty()) return points;
-    Points res;
-    res.pb(*points.begin());
-    for1(i, points.size() - 1) {
-        const Point& pt = points[i];
-        while (res.size() >= 2 &&
-               vectProd(res[res.size() - 2], res.back(), pt) == 0) {
-            res.pop_back();
-        }
-        res.pb(pt);
-    }
-    while (res.size() >= 3 &&
-           vectProd(*res.begin(), res.back(), res[res.size() - 2]) == 0) {
-        res.pop_back();
+        ll dst = dist2(cur, next);
+        res = update(res, h, w, dst);
     }
     return res;
 }
 
-bool checkNoConsequentColinear(const Points& points)
-{
-    if (points.size() <= 2) {
-        return true;
-    }
-    int n = points.size();
-    forv(i, points) {
-        const Point& start = points[i];
-        const Point& middle = points[(i + 1) % n];
-        const Point& end = points[(i + 2) % n];
-        if (vectProd(start, middle, end) == 0) {
-            return false;
-        }
-    }
-    return true;
-}
-
-double minAreaEnclosingBBox(const Points& points)
+pair<vi, ll> minAreaEnclosingBBox(const Points& points)
 {
     int n = points.size();
     int lap = 1, rap = 1, ap = 1;
-    double result = 1e12;
+    pair<vi, ll> result(vi(1, 1), 0);
     bool first = true;
     forn(index, n) {
         const Point& cur = points[index];
@@ -214,35 +152,30 @@ double minAreaEnclosingBBox(const Points& points)
         while (vectProd(cur, ort, points[(rap + 1) % n]) >
                vectProd(cur, ort, points[rap])) rap = (rap + 1) % n;
 
-        double h = vectProd(cur, next, points[ap]);
-        double w = vectProd(cur, ort, points[rap]) -
+        ll h = vectProd(cur, next, points[ap]);
+        ll w = vectProd(cur, ort, points[rap]) -
                    vectProd(cur, ort, points[lap]);
-        require(w >= 0, "Negative width");
-        result = min(result, h / dist2(cur, next) * w);
-        //cerr << index << " " << lap << " " << ap << " " << rap << endl;
+        ll dst = dist2(cur, next);
+        result = update(result, h, w, dst);
     }
     return result;
 }
 
-double solve(const Points& points)
+pair<vi, ll> solve(const Points& points)
 {
-    /*
-    forv(i, points) {
-        cerr << points[i].x << " : " << points[i].y << endl;
-    }
-    */
+    cerr << "ch size : " << points.size() << endl;
     const int MAX_NUM_POINTS_NAIVE = 4;
     if (points.size() <= MAX_NUM_POINTS_NAIVE) {
         return naiveMinAreaEnclosingBBox(points);
     }
     else {
-        require(checkNoConsequentColinear(points),
+        REQUIRE(checkNoConsequentColinear(points),
                 "There are three consequent colinear points");
         return minAreaEnclosingBBox(points);
     }
 }
 
-double solveNaive(const Points& points)
+pair<vi, ll> solveNaive(const Points& points)
 {
     return naiveMinAreaEnclosingBBox(points);
 }
@@ -250,6 +183,16 @@ double solveNaive(const Points& points)
 void printUsage(const char* binary)
 {
     cerr << binary << " " << "sol | naive | check" << endl;
+}
+
+ostream& operator<<(ostream& os, const pair<vi, ll>& obj)
+{
+    for (int i = obj.first.size() - 1; i >= 0; --i) {
+        os << obj.first[i];
+    }
+    os << "/";
+    os << obj.second;
+    return os;
 }
 
 int main(int argc, char** argv)
@@ -262,20 +205,17 @@ int main(int argc, char** argv)
     string var = argv[1];
     Points points;
     readData(points);
-    cout.precision(10);
-    cout << fixed;
     points = convexHull(points);
     if (var == "naive") {
         cout << solveNaive(points) << endl;
     }
     else {
-        double ans = solve(points);
+        pair<vi, ll> ans = solve(points);
         if (var == "check") {
-            double naive = solveNaive(points);
-            ostringstream os;
-            os << "Naive and correct solutions differ"
-               << "  ans : " << ans << " naive : " << naive << endl;
-            require(ans == naive, os.str());
+            pair<vi, ll> naive = solveNaive(points);
+            REQUIRE(ans == naive, "Naive and correct solutions differ"
+                                  << "  ans : " << ans << " naive : "
+                                  << naive);
         }
         cout << ans << endl;
     }
