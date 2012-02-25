@@ -46,15 +46,15 @@ void test1()
     exit(0);
 }
 
-// sample 2
-void test2()
+// sample 3
+void test3()
 {
     printf("4\n0 0\n1 0\n1 1\n0 1\n-1 1\n4\n-1 3\n0 3\n0 4\n-1 4\n1 -1\n");
     exit(0);
 }
 
-// sample 3
-void test3()
+// sample 2
+void test2()
 {
     printf("4\n0 0\n1 0\n1 1\n0 1\n0 0\n3\n2 0\n3 0\n3 1\n0 1\n");
     exit(0);
