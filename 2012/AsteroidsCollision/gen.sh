@@ -2,6 +2,8 @@
 
 if [ ! -d "tests" ]; then
     mkdir "tests"
+else
+    rm  "tests/*"
 fi
 
 for i in {1..10}; do
@@ -9,6 +11,7 @@ for i in {1..10}; do
     ./generator "$i" 10 10 100 > "tests/$i.in"
     echo "Sol.."
     ./solution sol < "tests/$i.in" > "tests/$i.out"
+    ./checker "tests/$i.in" "tests/$i.out" "tests/$i.out"
 done
 
 for i in {11..19}; do
@@ -16,6 +19,7 @@ for i in {11..19}; do
     ./generator "$i" 100 3 1000 > "tests/$i.in"
     echo "Sol.."
     ./solution sol < "tests/$i.in" > "tests/$i.out"
+    ./checker "tests/$i.in" "tests/$i.out" "tests/$i.out"
 done
 
 for i in {20..25}; do
@@ -23,6 +27,7 @@ for i in {20..25}; do
     ./generator "$i" 3 1000 100000 > "tests/$i.in"
     echo "Sol.."
     ./solution sol < "tests/$i.in" > "tests/$i.out"
+    ./checker "tests/$i.in" "tests/$i.out" "tests/$i.out"
 done
 
 for i in {26..50}; do
@@ -30,4 +35,5 @@ for i in {26..50}; do
     ./generator "$i" 40000 40000 100000000 > "tests/$i.in"
     echo "Sol.."
     ./solution sol < "tests/$i.in" > "tests/$i.out"
+    ./checker "tests/$i.in" "tests/$i.out" "tests/$i.out"
 done
