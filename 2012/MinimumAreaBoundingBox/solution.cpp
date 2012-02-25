@@ -98,7 +98,7 @@ T update(const T& res, ll a, ll b, ll c)
 
 pair<vi, ll> naiveMinAreaEnclosingBBox(const Points& points)
 {
-    if (points.size() <= 2) return mp(vi(1, 1), 0);
+    if (points.size() <= 2) return mp(vi(1, 0), 1);
     int n = points.size();
     pair<vi, ll> res = mp(vi(1, 1), 0);
     forv(i, points) {
