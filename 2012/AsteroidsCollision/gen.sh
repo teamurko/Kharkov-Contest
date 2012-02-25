@@ -3,7 +3,7 @@
 if [ ! -d "tests" ]; then
     mkdir "tests"
 else
-    rm  "tests/*"
+    rm  tests/*
 fi
 
 for i in {1..10}; do

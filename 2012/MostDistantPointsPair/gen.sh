@@ -1,5 +1,4 @@
 #!/bin/bash
-
 if [ ! -d "tests" ]; then
     mkdir "tests"
 else
