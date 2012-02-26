@@ -34,7 +34,8 @@ vi toVec(ll n)
 
 vi mul(const vi& a, const vi& b)
 {
-    vi c(a.size() + b.size());
+    vi c(a.size() + b.size() + 2);
+    /*
     forv(i, c) {
         forn(j, i + 1) {
             if (j < a.size() && i - j < b.size()) {
@@ -45,6 +46,16 @@ vi mul(const vi& a, const vi& b)
             c[i + 1] += c[i] / 10;
             c[i] %= 10;
         }
+    }
+    */
+    forv(i, a) {
+        forv(j, b) {
+            c[i + j] += a[i] * b[j];
+        }
+    }
+    forv(i, c) {
+        if (i + 1 < c.size()) c[i + 1] += c[i] / 10;
+        c[i] %= 10;
     }
     while (c.size() > 1 && c.back() == 0) c.pop_back();
     return c;
@@ -81,6 +92,16 @@ void cancel(ll& a, ll& b)
     b /= d;
 }
 
+ostream& operator<<(ostream& os, const pair<vi, ll>& obj)
+{
+    for (int i = obj.first.size() - 1; i >= 0; --i) {
+        os << obj.first[i];
+    }
+    os << "/";
+    os << obj.second;
+    return os;
+}
+
 template <typename T>
 T update(const T& res, ll a, ll b, ll c)
 {
@@ -88,10 +109,14 @@ T update(const T& res, ll a, ll b, ll c)
     REQUIRE(c > 0, "Distance should be positive");
     cancel(a, c);
     cancel(b, c);
-    vi pre = mul(a, b);
+    //cerr << "Update " << a << " " << b << " " << c << endl;
+    vi pre = mul(toVec(a), toVec(b));
+    //cerr << res << endl;
     if (cmp(mul(res.first, toVec(c)),
             mul(toVec(res.second), pre)) == 1) {
-        return mp(pre, c);
+        T tmp = mp(pre, c);
+        //cerr << "tmp : " << tmp << endl;
+        return tmp;
     }
     return res;
 }
@@ -125,9 +150,13 @@ pair<vi, ll> naiveMinAreaEnclosingBBox(const Points& points)
         ll h = vectProd(cur, next, points[ap]);
         ll w = vectProd(cur, ort, points[dapr]) -
                    vectProd(cur, ort, points[dapl]);
+        REQUIRE(w >= 0, "w < 0");
         ll dst = dist2(cur, next);
+        //cerr << h * w << " " << dst << endl;
         res = update(res, h, w, dst);
+        //cerr << "res cyc : " << res << endl;
     }
+    //cerr << "res : " << res << endl;
     return res;
 }
 
@@ -156,6 +185,7 @@ pair<vi, ll> minAreaEnclosingBBox(const Points& points)
         ll w = vectProd(cur, ort, points[rap]) -
                    vectProd(cur, ort, points[lap]);
         ll dst = dist2(cur, next);
+        // cerr << h * w << " " << dst << endl;
         result = update(result, h, w, dst);
     }
     return result;
@@ -185,18 +215,19 @@ void printUsage(const char* binary)
     cerr << binary << " " << "sol | naive | check" << endl;
 }
 
-ostream& operator<<(ostream& os, const pair<vi, ll>& obj)
-{
-    for (int i = obj.first.size() - 1; i >= 0; --i) {
-        os << obj.first[i];
-    }
-    os << "/";
-    os << obj.second;
-    return os;
-}
 
 int main(int argc, char** argv)
 {
+    /*
+    forn(i, 20) {
+        forn(j, 20) {
+            vi t = mul(toVec(i), toVec(j));
+            cerr << i << " " << j << " ";
+            pair<vi, ll> c(t, 1);
+            cerr << c << endl;
+        }
+    }
+    */
     ios_base::sync_with_stdio(false);
     if (argc != 2) {
         printUsage(argv[0]);
@@ -213,6 +244,7 @@ int main(int argc, char** argv)
         pair<vi, ll> ans = solve(points);
         if (var == "check") {
             pair<vi, ll> naive = solveNaive(points);
+            cerr << "naive : " << naive << endl;
             REQUIRE(ans == naive, "Naive and correct solutions differ"
                                   << "  ans : " << ans << " naive : "
                                   << naive);

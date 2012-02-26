@@ -84,9 +84,63 @@ Frac intersect(const Vector& v, const Point& a, const Point& b)
     return t1;
 }
 
+vi toVec(ll n)
+{
+    vi r;
+    while (n > 0) {
+        r.pb(n % 10);
+        n /= 10;
+    }
+    if (r.empty()) r.pb(0);
+    return r;
+}
+
+vi mul(const vi& a, const vi& b)
+{
+    vi c(a.size() + b.size() + 2);
+    forv(i, a) {
+        forv(j, b) {
+            c[i + j] += a[i] * b[j];
+        }
+    }
+    forv(i, c) {
+        if (i + 1 < c.size()) c[i + 1] += c[i] / 10;
+        c[i] %= 10;
+    }
+    while (c.size() > 1 && c.back() == 0) c.pop_back();
+    return c;
+}
+
+vi mul(ll na, ll nb)
+{
+    REQUIRE(na >= 0 && nb >= 0, "Cannot multiply negative numbers!");
+    vi a = toVec(na);
+    vi b = toVec(nb);
+    return mul(a, b);
+}
+
+int cmp(const vi& a, const vi& b)
+{
+    REQUIRE(!a.empty() && !b.empty(), "Empty big integers!");
+    if (a.size() > b.size()) {
+        return 1;
+    } else if (a.size() < b.size()) {
+        return -1;
+    } else {
+        for (int i = a.size() - 1; i >= 0; --i) {
+            if (a[i] > b[i]) return 1;
+            else if (a[i] < b[i]) return -1;
+        }
+    }
+    return 0;
+}
+
+
 Frac min(const Frac& a, const Frac& b)
 {
-    if (a.x * b.y < b.x * a.y) {
+    vi first = mul(a.x, b.y);
+    vi second = mul(b.x, a.y);
+    if (cmp(first, second) < 0) {
         return a;
     }
     else {
